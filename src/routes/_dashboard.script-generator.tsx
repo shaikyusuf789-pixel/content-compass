@@ -282,6 +282,16 @@ function ScriptGenerator() {
                 >
                   <div 
                     className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setInputMode("idea")}
+                  >
+                    <RadioGroupItem value="idea" id="mode-idea" />
+                    <Label htmlFor="mode-idea" className="flex-1 cursor-pointer">
+                      <div className="font-semibold text-sm">Approved Ideas</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">From Competitor Analysis</div>
+                    </Label>
+                  </div>
+                  <div 
+                    className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => setInputMode("topic")}
                   >
                     <RadioGroupItem value="topic" id="mode-topic" />
@@ -312,6 +322,25 @@ function ScriptGenerator() {
                   </div>
                 </RadioGroup>
               </div>
+
+              {inputMode === "idea" && (
+                <div className="space-y-2">
+                  <Label htmlFor="idea-select">Select Approved Idea</Label>
+                  <select
+                    id="idea-select"
+                    className="w-full border rounded-md p-2 text-sm bg-white"
+                    value={selectedIdeaId}
+                    onChange={(e) => handleIdeaSelect(e.target.value)}
+                  >
+                    <option value="">-- Choose an idea --</option>
+                    {approvedIdeas.map((idea) => (
+                      <option key={idea.id} value={idea.id}>
+                        {idea.proposed_title || idea.original_title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {inputMode === "pdf" && (
                 <div className="space-y-4">
@@ -476,11 +505,49 @@ function ScriptGenerator() {
         <div className="space-y-6">
           <Card className="min-h-[600px] flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between border-b py-4">
-              <CardTitle className="text-lg">Script Preview</CardTitle>
+              <div className="flex items-center space-x-2">
+                <CardTitle className="text-lg">Script Preview</CardTitle>
+                {segments.length > 0 && (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                    {segments.length} Segments
+                  </Badge>
+                )}
+              </div>
               {segments.length > 0 && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
-                  {segments.length} Segments
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditing(!isEditing)}
+                    className={isEditing ? "bg-blue-50" : ""}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" />
+                    {isEditing ? "Stop Editing" : "Edit"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    <RotateCcw className={cn("w-4 h-4 mr-1", isGenerating && "animate-spin")} />
+                    Regenerate
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleSaveScript}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-1" />
+                    )}
+                    Save Script
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent className="flex-1 p-0">
@@ -508,9 +575,21 @@ function ScriptGenerator() {
                             {seg.telugu_text.split(" ").length} words
                           </Badge>
                         </div>
-                        <div className="p-4 bg-muted/30 rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap">
-                          {seg.telugu_text}
-                        </div>
+                        {isEditing ? (
+                          <Textarea
+                            className="p-4 bg-white rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap"
+                            value={seg.telugu_text}
+                            onChange={(e) => {
+                              const newSegments = [...segments];
+                              newSegments[i].telugu_text = e.target.value;
+                              setSegments(newSegments);
+                            }}
+                          />
+                        ) : (
+                          <div className="p-4 bg-muted/30 rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap">
+                            {seg.telugu_text}
+                          </div>
+                        )}
                       </TabsContent>
                     ))}
                   </div>

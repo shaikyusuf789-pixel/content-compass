@@ -30,7 +30,7 @@ async function callAI(prompt: string, system: string) {
       "Lovable-API-Key": key,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.0-flash",
       messages: [
         { role: "system", content: system },
         { role: "user", content: prompt },

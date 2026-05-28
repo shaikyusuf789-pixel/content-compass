@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useRouterState, Link } from "@tanstack/react-r
 import { LayoutDashboard, ListVideo, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated")({
+export const Route = createFileRoute("/_dashboard")({
   component: AuthedLayout,
 });
 

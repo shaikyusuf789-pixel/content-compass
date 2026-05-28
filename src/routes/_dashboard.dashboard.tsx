@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Play, Radio, ListVideo, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_dashboard/dashboard")({
   component: Dashboard,
   head: () => ({ meta: [{ title: "Dashboard — Sky Intel" }] }),
 });

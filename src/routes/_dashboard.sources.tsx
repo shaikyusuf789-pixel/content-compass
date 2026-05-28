@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Trash2, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/sources")({
+export const Route = createFileRoute("/_dashboard/sources")({
   component: SourcesPage,
   head: () => ({ meta: [{ title: "Sources — Sky Intel" }] }),
 });

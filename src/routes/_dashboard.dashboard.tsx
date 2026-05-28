@@ -19,10 +19,15 @@ export const Route = createFileRoute("/_dashboard/dashboard")({
 
 function Dashboard() {
   const qc = useQueryClient();
+  const [sliderValue, setSliderValue] = useState<number[]>([1]);
   
   const autoRun = useQuery({
     queryKey: ["auto-run-settings"],
-    queryFn: () => useServerFn(getAutoRunSettings)(),
+    queryFn: async () => {
+      const data = await useServerFn(getAutoRunSettings)();
+      setSliderValue([data.interval_hrs]);
+      return data;
+    },
   });
 
   const updateAutoRun = useMutation({

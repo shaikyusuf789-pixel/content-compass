@@ -22,15 +22,17 @@ async function apifyRun(actorId: string, input: unknown, token: string) {
 }
 
 async function callAI(prompt: string, system: string) {
-  const key = process.env.LOVABLE_API_KEY!;
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY not configured in secrets");
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: system },
         { role: "user", content: prompt },
@@ -38,7 +40,12 @@ async function callAI(prompt: string, system: string) {
       response_format: { type: "json_object" },
     }),
   });
-  if (!res.ok) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`OpenAI error ${res.status}: ${errorText.slice(0, 300)}`);
+  }
+  
   const data = await res.json();
   return JSON.parse(data.choices[0].message.content);
 }

@@ -39,7 +39,7 @@ const TABS: {
 
 const PAGE_SIZE = 12;
 
-const ACTION_TO_STATUS: Record<ActionKey, string> = {
+const ACTION_TO_STATUS: Record<Exclude<ActionKey, "generate">, string> = {
   approve: "Approved",
   reject: "Rejected",
   priority: "Priority",

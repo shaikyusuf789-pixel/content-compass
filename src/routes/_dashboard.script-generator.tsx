@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw } from "lucide-react";
+import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";

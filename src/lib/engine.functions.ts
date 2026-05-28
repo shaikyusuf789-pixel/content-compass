@@ -125,7 +125,7 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
             let transcript = "";
             try {
               const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl }, token);
-              transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 8000);
+              transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 30000);
             } catch (e) {
               console.warn(`Transcript failed for ${v.title}, falling back to description.`);
               transcript = v.text || v.description || "";
@@ -153,7 +153,7 @@ ${transcript || v.description || "(no transcript available)"}`;
             const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
               source_id: source.id,
               video_url: videoUrl,
-              original_summary: transcript.slice(0, 2000),
+              original_summary: transcript, // Save full transcript for script generation wiring
               views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
               published_date: pubDate,
               duration: v.duration?.toString() ?? null,

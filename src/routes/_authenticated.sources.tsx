@@ -123,6 +123,24 @@ function SourcesPage() {
     reader.readAsText(file);
   };
 
+  const downloadSampleCSV = () => {
+    const headers = "Channel Name,URL";
+    const rows = [
+      "Gagan Pratap,https://www.youtube.com/@MathsByGaganPratap",
+      "Aditya Ranjan,https://www.youtube.com/@AdityaRanjanTalks"
+    ].join("\n");
+    const csvContent = `${headers}\n${rows}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "sample_sources.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <div>
@@ -169,6 +187,12 @@ function SourcesPage() {
             <div className="text-center space-y-1">
               <p className="text-sm font-medium">CSV Format: Name, URL</p>
               <p className="text-xs text-muted-foreground">Example: Gagan Pratap, https://youtube.com/@...</p>
+              <button 
+                onClick={downloadSampleCSV}
+                className="text-xs text-primary hover:underline block mt-1"
+              >
+                Download sample sheet
+              </button>
             </div>
             <input
               type="file"

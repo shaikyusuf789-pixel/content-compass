@@ -69,7 +69,18 @@ function ScriptGenerator() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      const loadPdfJs = async () => {
+        try {
+          // @ts-ignore - dynamic import for pdfjs-dist
+          const mod = await import("pdfjs-dist");
+          pdfjsLib = mod;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          console.log("PDF.js loaded successfully");
+        } catch (error) {
+          console.error("Failed to load PDF.js:", error);
+        }
+      };
+      loadPdfJs();
     }
   }, []);
 

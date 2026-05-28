@@ -47,7 +47,13 @@ async function callAI(prompt: string, system: string) {
   }
   
   const data = await res.json();
-  return JSON.parse(data.choices[0].message.content);
+  const content = data.choices[0].message.content;
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    console.error("Failed to parse AI JSON:", content);
+    throw new Error("AI returned invalid JSON format");
+  }
 }
 
 const SYSTEM_PROMPT = `You are an expert YouTube content strategist specializing in Indian educational and government exam preparation content (SSC, UPSC, RRB, APPSC, Banking).
@@ -67,33 +73,40 @@ JSON schema:
 }`;
 
 export const runIdeaEngine = createServerFn({ method: "POST" })
-  .handler(async () => {
+  .inputValidator(z.object({ sourceId: z.string().uuid().optional() }).optional())
+  .handler(async ({ data: inputData }) => {
     console.log("Starting Idea Engine run...");
     const token = process.env.APIFY_API_TOKEN;
     if (!token) throw new Error("APIFY_API_TOKEN not configured");
 
-    const { data: sources, error: srcErr } = await supabaseAdmin
-      .from("sources_master")
-      .select("*")
-      .eq("type", "youtube");
+    let query = supabaseAdmin.from("sources_master").select("*").eq("type", "youtube");
+    if (inputData?.sourceId) {
+      query = query.eq("id", inputData.sourceId);
+    }
+
+    const { data: sources, error: srcErr } = await query;
     if (srcErr) throw srcErr;
     if (!sources || sources.length === 0) return { processed: 0, message: "No YouTube sources configured." };
 
-    let processed = 0;
+    let totalProcessed = 0;
     const errors: string[] = [];
 
+    // Process sources sequentially to avoid overwhelming Apify concurrency limits
+    // but parallelize videos within each source.
     for (const source of sources) {
       try {
+        console.log(`Scraping channel: ${source.channel_name} (${source.source_url})`);
         const videos = await apifyRun(
           CHANNEL_SCRAPER,
           { startUrls: [{ url: source.source_url }], maxResults: 3, maxResultsShorts: 0, maxResultStreams: 0 },
           token,
         );
 
-        for (const v of videos.slice(0, 3)) {
+        console.log(`Found ${videos.length} videos for ${source.channel_name}`);
+        
+        const videoPromises = videos.slice(0, 3).map(async (v) => {
           const videoUrl: string = v.url || v.videoUrl;
-          console.log(`Processing video: ${v.title} (${videoUrl})`);
-          if (!videoUrl) continue;
+          if (!videoUrl) return null;
 
           // dedupe
           const { data: existing } = await supabaseAdmin
@@ -101,7 +114,12 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
             .select("id")
             .eq("video_url", videoUrl)
             .maybeSingle();
-          if (existing) continue;
+          if (existing) {
+            console.log(`Video already exists: ${v.title}`);
+            return null;
+          }
+
+          console.log(`Processing video: ${v.title} (${videoUrl})`);
 
           // transcript
           let transcript = "";
@@ -109,6 +127,7 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
             const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl }, token);
             transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 8000);
           } catch (e) {
+            console.warn(`Transcript failed for ${v.title}, falling back to description.`);
             transcript = v.text || v.description || "";
           }
 
@@ -122,8 +141,7 @@ ${transcript || v.description || "(no transcript available)"}`;
 
           console.log(`Calling AI for: ${v.title}`);
           const ai = await callAI(aiInput, SYSTEM_PROMPT);
-          console.log("AI Response received");
-
+          
           console.log(`Inserting raw_content for: ${v.title}`);
           const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
             source_id: source.id,
@@ -147,15 +165,26 @@ ${transcript || v.description || "(no transcript available)"}`;
             console.error(`Insert failed for ${v.title}:`, insErr);
             throw insErr;
           }
+
           console.log(`Successfully inserted: ${v.title}`);
-          processed++;
-        }
+          return true;
+        });
+
+        const results = await Promise.allSettled(videoPromises);
+        results.forEach((r, idx) => {
+          if (r.status === "fulfilled") {
+            if (r.value) totalProcessed++;
+          } else {
+            errors.push(`${source.channel_name} (video ${idx}): ${r.reason.message}`);
+          }
+        });
+
       } catch (e: any) {
         errors.push(`${source.channel_name}: ${e.message}`);
       }
     }
 
-    return { processed, errors, sources: sources.length };
+    return { processed: totalProcessed, errors, sources: sources.length };
   });
 
 const SourceInput = z.object({

@@ -61,6 +61,12 @@ function ScriptGenerator() {
   const approvedIdeas = approvedIdeasData?.ideas || [];
 
   useEffect(() => {
+    if (search.ideaId && approvedIdeas.length > 0) {
+      handleIdeaSelect(search.ideaId);
+    }
+  }, [search.ideaId, approvedIdeas.length]);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
     }

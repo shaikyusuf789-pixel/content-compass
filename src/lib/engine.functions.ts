@@ -119,61 +119,26 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
               return null;
             }
 
-            console.log(`Processing video: ${v.title} (${videoUrl})`);
+            console.log(`Processing basic info for video: ${v.title} (${videoUrl})`);
 
-            // transcript
-            let transcript = "";
-            try {
-              const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl }, token);
-              transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 30000);
-            } catch (e) {
-              console.warn(`Transcript failed for ${v.title}, falling back to description.`);
-              transcript = v.text || v.description || "";
-            }
-
-            const aiInput = `Channel: ${source.channel_name}
-Original Title: ${v.title}
-Views: ${v.viewCount ?? v.views ?? "N/A"}
-Duration: ${v.duration ?? "N/A"}
-
-Transcript / Description:
-${transcript || v.description || "(no transcript available)"}`;
-
-            console.log(`Calling AI for: ${v.title}`);
-            const ai = await callAI(aiInput, SYSTEM_PROMPT);
-            
-            // Fix for relative dates from YouTube scraper (e.g. "5 hours ago")
+            // Fix for relative dates
             let pubDate = v.date || v.publishedAt || null;
             if (pubDate && isNaN(Date.parse(pubDate))) {
-              console.log(`Non-standard date detected: ${pubDate}. Setting to null.`);
               pubDate = null; 
             }
 
-            console.log(`Inserting raw_content for: ${v.title}`);
             const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
               source_id: source.id,
               video_url: videoUrl,
-              original_summary: transcript, // Save full transcript for script generation wiring
               views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
               published_date: pubDate,
               duration: v.duration?.toString() ?? null,
               thumbnail_url: v.thumbnailUrl || v.thumbnail || null,
               original_title: v.title,
-              proposed_title: ai.proposed_title,
-              new_thumbnail_outline: ai.new_thumbnail_outline,
-              target_audience: ai.target_audience,
-              core_hooks: ai.core_hooks ?? [],
-              summary_points: ai.summary_points ?? [],
-              video_outline: ai.video_outline ?? {},
               status: "Pending",
             });
 
-            if (insErr) {
-              console.error(`Insert failed for ${v.title}:`, insErr);
-              throw insErr;
-            }
-
-            console.log(`Successfully inserted: ${v.title}`);
+            if (insErr) throw insErr;
             return true;
           } catch (e: any) {
             console.error(`Failed to process video ${v.title}:`, e);

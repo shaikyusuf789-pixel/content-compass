@@ -14,6 +14,7 @@ function DashboardLayout() {
     { to: "/sources", label: "Sources", icon: Radio },
     { to: "/content-preview", label: "Content Preview", icon: ListVideo },
     { to: "/idea-cards", label: "Idea Cards", icon: Star },
+    { to: "/script-generator", label: "Script Generator", icon: ListVideo },
   ];
 
   return (

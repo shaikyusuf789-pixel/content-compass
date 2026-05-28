@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { Eye, Calendar, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ActionKey = "approve" | "reject" | "priority" | "done";
+export type ActionKey = "approve" | "reject" | "priority" | "done" | "generate";
 
 export interface IdeaCard {
   id: string;
@@ -17,6 +17,7 @@ export interface IdeaCard {
   core_hooks: string[];
   summary_points: string[];
   video_outline: any;
+  original_summary: string | null;
   status: string;
 }
 
@@ -192,6 +193,7 @@ const ACTION_META: Record<
   reject: { label: "Reject", className: "gradient-reject text-white" },
   priority: { label: "Priority", className: "bg-orange-500 text-white" },
   done: { label: "Done", className: "gradient-primary text-primary-foreground" },
+  generate: { label: "Generate Script", className: "bg-blue-600 text-white col-span-full" },
 };
 
 function ActionButton({

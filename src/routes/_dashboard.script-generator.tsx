@@ -15,7 +15,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getIdeas, saveScript } from "@/lib/engine.functions";
 import { cn } from "@/lib/utils";
-import * as pdfjsLib from "pdfjs-dist";
+// pdfjsLib will be imported dynamically to avoid SSR issues
+let pdfjsLib: any = null;
 import { supabase } from "@/integrations/supabase/client";
 
 const scriptSearchSchema = z.object({

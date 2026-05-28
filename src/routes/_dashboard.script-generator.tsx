@@ -293,9 +293,10 @@ function ScriptGenerator() {
                       ) : (
                         <div className="flex items-center space-x-4">
                           <Button 
-                            variant="outline" 
-                            className="bg-white"
-                            onClick={() => {
+                            variant="default" 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={(e) => {
+                              e.preventDefault();
                               console.log("Upload button clicked, triggering file input");
                               fileInputRef.current?.click();
                             }}
@@ -306,7 +307,7 @@ function ScriptGenerator() {
                             ) : (
                               <Plus className="mr-2 h-4 w-4" />
                             )}
-                            Upload
+                            Select File
                           </Button>
                           <span className="text-xs text-muted-foreground">200MB per file • PDF, MD, JSON</span>
                         </div>

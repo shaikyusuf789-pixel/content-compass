@@ -161,3 +161,11 @@ export const deleteSource = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const bulkAddSources = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.array(SourceInput).parse(d))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.from("sources_master").insert(data);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.length };
+  });

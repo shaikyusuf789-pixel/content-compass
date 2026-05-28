@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      raw_content: {
+        Row: {
+          core_hooks: Json | null
+          created_at: string
+          date_extracted: string
+          duration: string | null
+          id: string
+          new_thumbnail_outline: string | null
+          original_summary: string | null
+          original_title: string | null
+          proposed_title: string | null
+          published_date: string | null
+          source_id: string | null
+          status: string
+          summary_points: string[] | null
+          target_audience: string | null
+          thumbnail_url: string | null
+          updated_at: string
+          video_outline: Json | null
+          video_url: string
+          views: number | null
+        }
+        Insert: {
+          core_hooks?: Json | null
+          created_at?: string
+          date_extracted?: string
+          duration?: string | null
+          id?: string
+          new_thumbnail_outline?: string | null
+          original_summary?: string | null
+          original_title?: string | null
+          proposed_title?: string | null
+          published_date?: string | null
+          source_id?: string | null
+          status?: string
+          summary_points?: string[] | null
+          target_audience?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_outline?: Json | null
+          video_url: string
+          views?: number | null
+        }
+        Update: {
+          core_hooks?: Json | null
+          created_at?: string
+          date_extracted?: string
+          duration?: string | null
+          id?: string
+          new_thumbnail_outline?: string | null
+          original_summary?: string | null
+          original_title?: string | null
+          proposed_title?: string | null
+          published_date?: string | null
+          source_id?: string | null
+          status?: string
+          summary_points?: string[] | null
+          target_audience?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_outline?: Json | null
+          video_url?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_content_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sources_master: {
+        Row: {
+          channel_name: string
+          created_at: string
+          id: string
+          source_url: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          channel_name: string
+          created_at?: string
+          id?: string
+          source_url: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          channel_name?: string
+          created_at?: string
+          id?: string
+          source_url?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -17,7 +17,6 @@ export const Route = createFileRoute("/_dashboard/script-generator")({
 });
 
 function ScriptGenerator() {
-  const { toast } = useToast();
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
   const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">("topic");
   const [topic, setTopic] = useState("");

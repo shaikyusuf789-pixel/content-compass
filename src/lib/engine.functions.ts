@@ -85,6 +85,7 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
 
         for (const v of videos.slice(0, 3)) {
           const videoUrl: string = v.url || v.videoUrl;
+          console.log(`Processing video: ${v.title} (${videoUrl})`);
           if (!videoUrl) continue;
 
           // dedupe

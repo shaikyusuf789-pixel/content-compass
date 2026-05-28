@@ -41,6 +41,7 @@ function DashboardLayout() {
     {
       label: "PIPELINE",
       items: [
+        { to: "/dashboard", label: "Idea Engine", icon: Radio, number: "0" },
         { to: "/pipeline", label: "Pipeline", icon: LayoutDashboard },
         { to: "/script-generator", label: "Scripting", icon: StickyNote, number: "1" },
         { to: "/chunks", label: "Chunks", icon: Layers, number: "2" },

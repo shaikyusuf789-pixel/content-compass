@@ -2,45 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { runIdeaEngine, getAutoRunSettings, updateAutoRunSettings, updateLastRunTimestamp } from "@/lib/engine.functions";
+import { runIdeaEngine, updateLastRunTimestamp } from "@/lib/engine.functions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Play, Radio, ListVideo, CheckCircle2, Clock, Activity } from "lucide-react";
+import { Loader2, Play, Radio, ListVideo, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { useEffect, useState } from "react";
+import { WatchdogControl } from "@/components/WatchdogControl";
 
 export const Route = createFileRoute("/_dashboard/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Dashboard — Sky Intel" }] }),
+  head: () => ({ meta: [{ title: "Idea Engine — SKY Studio" }] }),
 });
 
 function Dashboard() {
   const qc = useQueryClient();
-  const [sliderValue, setSliderValue] = useState<number[]>([1]);
   
-  const autoRun = useQuery({
-    queryKey: ["auto-run-settings"],
-    queryFn: async () => {
-      const data = await useServerFn(getAutoRunSettings)();
-      setSliderValue([data.interval_hrs]);
-      return data;
-    },
-  });
-
-  const updateAutoRun = useMutation({
-    mutationFn: (vars: { enabled: boolean; interval_hrs: number }) => 
-      useServerFn(updateAutoRunSettings)({ data: vars }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["auto-run-settings"] });
-      toast.success("Auto-run settings updated");
-    },
-  });
-
-  const setLastRun = useServerFn(updateLastRunTimestamp);
-
   const stats = useQuery({
     queryKey: ["stats"],
     queryFn: async () => {
@@ -54,40 +30,18 @@ function Dashboard() {
   });
 
   const runFn = useServerFn(runIdeaEngine);
+  const setLastRun = useServerFn(updateLastRunTimestamp);
+  
   const run = useMutation({
     mutationFn: () => runFn(),
     onSuccess: (res) => {
-      toast.success(`Processed ${res.processed} new ideas from ${res.sources ?? 0} sources.`);
-      if (res.errors?.length) toast.warning(res.errors.join(" | "));
+      toast.success(`Processed ${res.processed} new ideas.`);
       qc.invalidateQueries({ queryKey: ["stats"] });
-      qc.invalidateQueries({ queryKey: ["raw_content"] });
+      qc.invalidateQueries({ queryKey: ["ideas"] });
       setLastRun();
     },
     onError: (e: any) => toast.error(e.message),
   });
-
-  // Watchdog Timer
-  useEffect(() => {
-    if (!autoRun.data?.enabled) return;
-
-    const intervalMs = autoRun.data.interval_hrs * 60 * 60 * 1000;
-    const lastRun = autoRun.data.last_run ? new Date(autoRun.data.last_run).getTime() : 0;
-    const now = Date.now();
-    
-    const timeSinceLastRun = now - lastRun;
-    const nextRunIn = Math.max(0, intervalMs - timeSinceLastRun);
-
-    console.log(`Auto-run scheduled in ${nextRunIn / 1000 / 60} minutes`);
-
-    const timer = setTimeout(() => {
-      if (!run.isPending) {
-        console.log("Auto-running Phase 1 engine...");
-        run.mutate();
-      }
-    }, nextRunIn);
-
-    return () => clearTimeout(timer);
-  }, [autoRun.data, run.isPending]);
 
   const cards = [
     { label: "Sources", value: stats.data?.sources, icon: Radio },
@@ -96,89 +50,68 @@ function Dashboard() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-8 p-8">
+      <div className="flex flex-wrap items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-semibold">Phase 1 — Idea Engine</h1>
-          <p className="text-sm text-muted-foreground">Scrape competitor YouTube channels and generate fresh video ideas.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded uppercase tracking-wider">Phase 1</span>
+            <span className="text-[10px] text-slate-400 font-medium tracking-wider">• COMPETITOR SCRAPER</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900">Idea Engine</h1>
+          <p className="text-slate-500 mt-1">Scrape competitor YouTube channels and generate fresh video ideas.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border bg-card p-1 shadow-sm">
-          <div className="flex items-center gap-6 rounded-lg border bg-card px-4 py-2 shadow-sm">
-            <div className="flex flex-col gap-1.5 min-w-[140px]">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Interval</span>
-                <span className="text-[10px] font-bold text-primary">{sliderValue[0]} hrs</span>
-              </div>
-              <Slider
-                value={sliderValue}
-                onValueChange={setSliderValue}
-                onValueCommit={(v) => updateAutoRun.mutate({ 
-                  enabled: autoRun.data?.enabled ?? false, 
-                  interval_hrs: v[0] 
-                })}
-                min={1}
-                max={24}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            <div className="h-8 w-px bg-border" />
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Auto Run</span>
-              <div className="flex items-center gap-2">
-                <Switch 
-                  checked={autoRun.data?.enabled ?? false}
-                  onCheckedChange={(checked) => updateAutoRun.mutate({ 
-                    enabled: checked, 
-                    interval_hrs: autoRun.data?.interval_hrs ?? 1 
-                  })}
-                  disabled={updateAutoRun.isPending}
-                />
-                <span className={`text-xs font-semibold ${autoRun.data?.enabled ? "text-green-600" : "text-muted-foreground"}`}>
-                  {autoRun.data?.enabled ? "ON" : "OFF"}
-                </span>
-              </div>
-            </div>
-          </div>
-          </div>
-
-          <Button onClick={() => run.mutate()} disabled={run.isPending} variant="secondary" size="sm" className="h-8">
-            {run.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+        <div className="flex items-center gap-4">
+          <WatchdogControl />
+          <Button onClick={() => run.mutate()} disabled={run.isPending} className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 h-11 px-6 gap-2 rounded-2xl">
+            {run.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-current" />}
             Run manually
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-3">
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <Card key={c.label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{c.label}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+            <Card key={c.label} className="rounded-3xl border-slate-100 shadow-sm overflow-hidden border">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{c.label}</CardTitle>
+                <Icon className="h-4 w-4 text-indigo-500" />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-semibold">{c.value ?? "—"}</div>
+              <CardContent className="pt-4 pb-6">
+                <div className="text-4xl font-black text-slate-900">{c.value ?? "—"}</div>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">How this works</CardTitle>
+      <Card className="rounded-[2.5rem] border-slate-100 shadow-sm overflow-hidden border">
+        <CardHeader className="p-8 border-b bg-slate-50/30">
+          <CardTitle className="text-lg font-bold text-slate-900">Workflow Summary</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>1. Add competitor YouTube channels under <strong>Sources</strong>.</p>
-          <p>2. Click <strong>Run engine</strong>. We fetch the 3 newest videos per channel via Apify.</p>
-          <p>3. New videos (not already in the database) get a transcript pulled and analyzed by AI.</p>
-          <p>4. Review the structured ideas (titles, hooks, outlines) under <strong>Raw Content</strong>.</p>
+        <CardContent className="p-8 grid md:grid-cols-2 gap-8 text-sm text-slate-500">
+           <div className="space-y-4">
+              <div className="flex gap-4">
+                 <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold">1</div>
+                 <p className="leading-relaxed"><strong className="text-slate-900 block">Configure Sources</strong>Add YouTube channels or keyword search terms to monitor for new content.</p>
+              </div>
+              <div className="flex gap-4">
+                 <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold">2</div>
+                 <p className="leading-relaxed"><strong className="text-slate-900 block">Automated Scraping</strong>The engine pulls transcripts and metadata from recent high-performing videos.</p>
+              </div>
+           </div>
+           <div className="space-y-4">
+              <div className="flex gap-4">
+                 <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold">3</div>
+                 <p className="leading-relaxed"><strong className="text-slate-900 block">AI Idea Generation</strong>Claude analyzes transcripts to propose new titles, hooks, and outlines tailored to your style.</p>
+              </div>
+              <div className="flex gap-4">
+                 <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold">4</div>
+                 <p className="leading-relaxed"><strong className="text-slate-900 block">One-Click Approval</strong>Move generated ideas to the Scripting phase with a single click from the Idea Cards view.</p>
+              </div>
+           </div>
         </CardContent>
       </Card>
     </div>

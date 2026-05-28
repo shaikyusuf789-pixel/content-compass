@@ -145,6 +145,21 @@ function UploadsPage() {
     }
   };
 
+  const handleRename = async (fileId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_uploads")
+        .update({ display_name: newName })
+        .eq("id", fileId);
+
+      if (error) throw error;
+      toast.success("File renamed");
+      setFiles(files.map(f => f.id === fileId ? { ...f, display_name: newName } : f));
+    } catch (error: any) {
+      toast.error(error.message || "Rename failed");
+    }
+  };
+
   const handleDownload = async (file: any) => {
     const { data, error } = await supabase.storage
       .from("uploads")
@@ -314,16 +329,16 @@ function UploadsPage() {
                             <p className="font-medium truncate">{file.file_name}</p>
                           </div>
                           <div>
+                            <p className="text-muted-foreground">Type</p>
+                            <p className="font-medium">{file.file_type}</p>
+                          </div>
+                          <div>
                             <p className="text-muted-foreground">Size</p>
                             <p className="font-medium">{formatSize(file.file_size)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Uploaded At</p>
                             <p className="font-medium">{new Date(file.created_at).toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">ID</p>
-                            <p className="font-medium font-mono text-xs">{file.id}</p>
                           </div>
                         </div>
                       </div>

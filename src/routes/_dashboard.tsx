@@ -12,7 +12,8 @@ import {
   Mic2,
   Layers,
   StickyNote,
-  Trash2
+  Trash2,
+  Inbox
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,9 @@ function DashboardLayout() {
     {
       label: "PIPELINE",
       items: [
+        { to: "/dashboard", label: "Idea Engine", icon: Radio, number: "0" },
         { to: "/pipeline", label: "Pipeline", icon: LayoutDashboard },
+        { to: "/idea-cards", label: "Idea Cards", icon: Inbox, badge: "NEW" },
         { to: "/script-generator", label: "Scripting", icon: StickyNote, number: "1" },
         { to: "/chunks", label: "Chunks", icon: Layers, number: "2" },
         { to: "/audio", label: "Audio", icon: Mic2, number: "3" },

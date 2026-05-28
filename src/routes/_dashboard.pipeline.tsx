@@ -13,14 +13,7 @@ import {
   Circle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { WatchdogControl } from "@/components/WatchdogControl";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_dashboard/pipeline")({
@@ -52,42 +45,11 @@ function PipelinePage() {
           <p className="text-slate-500 mt-1">Automated competitor monitoring and content generation.</p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border">
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Auto Run</span>
-              <Slider 
-                value={[autoRun ? 1 : 0]} 
-                max={1} 
-                step={1} 
-                className="w-12"
-                onValueChange={(val) => setAutoRun(val[0] === 1)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-slate-400" />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 text-[11px] font-bold text-slate-500 hover:text-indigo-600 px-0">
-                    Every {frequency} <ChevronRight className="h-3 w-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setFrequency("1hr")}>Every 1 hr</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFrequency("2hr")}>Every 2 hr</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFrequency("6hr")}>Every 6 hr</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFrequency("12hr")}>Every 12 hr</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFrequency("24hr")}>Every 24 hr</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <div className="w-px h-10 bg-slate-100 mx-2" />
-          <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 h-11 px-6 gap-2">
-            <Play className="h-4 w-4 fill-current" />
-            Manual Run
-          </Button>
-        </div>
+        <WatchdogControl variant="compact" />
+        <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 h-11 px-6 gap-2 rounded-2xl">
+          <Play className="h-4 w-4 fill-current" />
+          Manual Run
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

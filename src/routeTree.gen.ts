@@ -21,6 +21,7 @@ import { Route as DashboardScriptGeneratorRouteImport } from './routes/_dashboar
 import { Route as DashboardPipelineRouteImport } from './routes/_dashboard.pipeline'
 import { Route as DashboardMasterVideoRouteImport } from './routes/_dashboard.master-video'
 import { Route as DashboardIdeaCardsRouteImport } from './routes/_dashboard.idea-cards'
+import { Route as DashboardHookGeneratorRouteImport } from './routes/_dashboard.hook-generator'
 import { Route as DashboardHistoryRouteImport } from './routes/_dashboard.history'
 import { Route as DashboardGammaPlayerRouteImport } from './routes/_dashboard.gamma-player'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard.dashboard'
@@ -89,6 +90,11 @@ const DashboardIdeaCardsRoute = DashboardIdeaCardsRouteImport.update({
   path: '/idea-cards',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardHookGeneratorRoute = DashboardHookGeneratorRouteImport.update({
+  id: '/hook-generator',
+  path: '/hook-generator',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardDashboardRoute
   '/gamma-player': typeof DashboardGammaPlayerRoute
   '/history': typeof DashboardHistoryRoute
+  '/hook-generator': typeof DashboardHookGeneratorRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
   '/master-video': typeof DashboardMasterVideoRoute
   '/pipeline': typeof DashboardPipelineRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardDashboardRoute
   '/gamma-player': typeof DashboardGammaPlayerRoute
   '/history': typeof DashboardHistoryRoute
+  '/hook-generator': typeof DashboardHookGeneratorRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
   '/master-video': typeof DashboardMasterVideoRoute
   '/pipeline': typeof DashboardPipelineRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/gamma-player': typeof DashboardGammaPlayerRoute
   '/_dashboard/history': typeof DashboardHistoryRoute
+  '/_dashboard/hook-generator': typeof DashboardHookGeneratorRoute
   '/_dashboard/idea-cards': typeof DashboardIdeaCardsRoute
   '/_dashboard/master-video': typeof DashboardMasterVideoRoute
   '/_dashboard/pipeline': typeof DashboardPipelineRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/gamma-player'
     | '/history'
+    | '/hook-generator'
     | '/idea-cards'
     | '/master-video'
     | '/pipeline'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/gamma-player'
     | '/history'
+    | '/hook-generator'
     | '/idea-cards'
     | '/master-video'
     | '/pipeline'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/_dashboard/dashboard'
     | '/_dashboard/gamma-player'
     | '/_dashboard/history'
+    | '/_dashboard/hook-generator'
     | '/_dashboard/idea-cards'
     | '/_dashboard/master-video'
     | '/_dashboard/pipeline'
@@ -342,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIdeaCardsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/hook-generator': {
+      id: '/_dashboard/hook-generator'
+      path: '/hook-generator'
+      fullPath: '/hook-generator'
+      preLoaderRoute: typeof DashboardHookGeneratorRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/history': {
       id: '/_dashboard/history'
       path: '/history'
@@ -402,6 +421,7 @@ interface DashboardRouteChildren {
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardGammaPlayerRoute: typeof DashboardGammaPlayerRoute
   DashboardHistoryRoute: typeof DashboardHistoryRoute
+  DashboardHookGeneratorRoute: typeof DashboardHookGeneratorRoute
   DashboardIdeaCardsRoute: typeof DashboardIdeaCardsRoute
   DashboardMasterVideoRoute: typeof DashboardMasterVideoRoute
   DashboardPipelineRoute: typeof DashboardPipelineRoute
@@ -422,6 +442,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardGammaPlayerRoute: DashboardGammaPlayerRoute,
   DashboardHistoryRoute: DashboardHistoryRoute,
+  DashboardHookGeneratorRoute: DashboardHookGeneratorRoute,
   DashboardIdeaCardsRoute: DashboardIdeaCardsRoute,
   DashboardMasterVideoRoute: DashboardMasterVideoRoute,
   DashboardPipelineRoute: DashboardPipelineRoute,

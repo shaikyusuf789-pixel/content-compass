@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Check,
   X,
@@ -30,8 +31,8 @@ const TABS: {
   actions: ActionKey[];
 }[] = [
   { key: "Pending", label: "Pending", icon: Inbox, actions: ["approve", "reject"] },
-  { key: "Approved", label: "Approved", icon: Check, actions: ["priority", "done", "reject"] },
-  { key: "Priority", label: "Priority", icon: Star, actions: ["done", "reject"] },
+  { key: "Approved", label: "Approved", icon: Check, actions: ["priority", "generate", "done", "reject"] },
+  { key: "Priority", label: "Priority", icon: Star, actions: ["generate", "done", "reject"] },
   { key: "Done", label: "Done", icon: CheckCircle2, actions: [] },
   { key: "Rejected", label: "Rejected", icon: X, actions: [] },
 ];
@@ -46,6 +47,7 @@ const ACTION_TO_STATUS: Record<ActionKey, string> = {
 };
 
 function RawContentPage() {
+  const navigate = useNavigate();
   const fetchFn = useServerFn(getIdeas);
   const updateFn = useServerFn(updateIdeaStatus);
   const qc = useQueryClient();
@@ -124,6 +126,16 @@ function RawContentPage() {
   });
 
   const handleAction = (action: ActionKey, idea: IdeaCard) => {
+    if (action === "generate") {
+      navigate({
+        to: "/script-generator",
+        search: {
+          transcript: idea.original_summary || "",
+          topic: idea.proposed_title || idea.original_title || "",
+        },
+      });
+      return;
+    }
     const status = ACTION_TO_STATUS[action];
     mutate.mutate({ idea, status });
   };

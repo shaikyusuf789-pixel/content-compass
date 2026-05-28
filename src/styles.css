@@ -140,5 +140,49 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    @apply antialiased selection:bg-primary/20;
   }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-black/40 backdrop-blur-xl border-white/20 dark:border-white/5;
+  }
+  
+  .shadow-card {
+    box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px -5px var(--color-primary);
+  }
+
+  .gradient-primary {
+    @apply bg-linear-to-br from-primary via-primary/90 to-primary/80;
+  }
+
+  .gradient-card {
+    @apply bg-linear-to-b from-card to-card/95;
+  }
+
+  .gradient-accept {
+    @apply bg-linear-to-br from-emerald-500 to-emerald-600;
+  }
+
+  .gradient-reject {
+    @apply bg-linear-to-br from-rose-500 to-rose-600;
+  }
+
+  .text-gradient {
+    @apply bg-linear-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
 }

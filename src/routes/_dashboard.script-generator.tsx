@@ -382,14 +382,7 @@ function ScriptGenerator() {
 
                   <div className="space-y-2">
                     <Label htmlFor="pdf-upload" className="cursor-pointer">UPLOAD * (PDF, MD, JSON)</Label>
-                    <input
-                      id="pdf-upload"
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".pdf,.md,.json,.txt"
-                      className="hidden"
-                    />
+                    {/* Hidden input removed from here and moved to component root */}
                     <div className="border-2 border-dashed rounded-lg p-6 bg-slate-50 flex flex-col items-center justify-center space-y-3">
                       {fileName ? (
                         <div className="flex flex-col w-full space-y-3">

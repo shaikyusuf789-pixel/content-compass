@@ -101,6 +101,7 @@ function ScriptGenerator() {
         body: {
           topic,
           content,
+          chapterContext,
           videoType,
           inputMode,
           wordCount,

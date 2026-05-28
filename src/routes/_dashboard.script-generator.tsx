@@ -9,8 +9,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Wand2, FileText, CheckCircle2, X } from "lucide-react";
+import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getIdeas, saveScript } from "@/lib/engine.functions";
 import * as pdfjsLib from "pdfjs-dist";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,8 +29,11 @@ export const Route = createFileRoute("/_dashboard/script-generator")({
 
 function ScriptGenerator() {
   const search = useSearch({ from: "/_dashboard/script-generator" });
+  const getIdeasFn = useServerFn(getIdeas);
+  const saveScriptFn = useServerFn(saveScript);
+
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
-  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">(
+  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf" | "idea">(
     search.transcript ? "transcript" : "topic"
   );
   const [topic, setTopic] = useState(search.topic || "");
@@ -41,6 +47,16 @@ function ScriptGenerator() {
   const [model, setModel] = useState("claude-3-5-sonnet");
   const [fileName, setFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string>("");
+
+  const { data: approvedIdeasData } = useQuery({
+    queryKey: ["approved-ideas"],
+    queryFn: () => getIdeasFn({ data: { status: "Approved" } }),
+  });
+
+  const approvedIdeas = approvedIdeasData?.ideas || [];
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -101,6 +117,51 @@ function ScriptGenerator() {
     setContent("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleIdeaSelect = (ideaId: string) => {
+    const idea = approvedIdeas.find(i => i.id === ideaId);
+    if (!idea) return;
+    
+    setSelectedIdeaId(ideaId);
+    setTopic(idea.proposed_title || idea.original_title || "");
+    
+    // Combine outline and summary points for the Topic/Outline box
+    const outline = idea.video_outline;
+    const summary = (idea.summary_points || []).map(p => `• ${p}`).join("\n");
+    const hooks = (idea.core_hooks || []).map(h => `Hook: ${h}`).join("\n");
+    
+    const combinedContent = `TITLE: ${idea.proposed_title}\n\nOUTLINE:\n${outline?.hook || ""}\n${outline?.intro || ""}\n${outline?.body || ""}\n\nSUMMARY POINTS:\n${summary}\n\nCORE HOOKS:\n${hooks}`;
+    
+    setChapterContext(combinedContent);
+    // Switch to PDF/Idea mode which uses chapterContext + content
+    // Actually, let's make it simple: pre-fill the transcript box if we have it
+    if (idea.original_summary) {
+      setContent(idea.original_summary);
+    }
+  };
+
+  const handleSaveScript = async () => {
+    if (segments.length === 0) return;
+    setIsSaving(true);
+    try {
+      const fullScript = segments.map(s => s.voiceover).join("\n\n");
+      await saveScriptFn({ 
+        data: {
+          idea_id: selectedIdeaId || undefined,
+          title: topic || "Untitled Script",
+          content: fullScript,
+          word_count: wordCount,
+          video_type: videoType,
+          model: model,
+        } 
+      });
+      toast.success("Script saved to database!");
+    } catch (err: any) {
+      toast.error("Failed to save script: " + err.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 

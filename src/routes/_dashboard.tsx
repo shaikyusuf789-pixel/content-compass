@@ -10,12 +10,18 @@ function DashboardLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const nav = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/sources", label: "Sources", icon: Radio },
-    { to: "/content-preview", label: "Content Preview", icon: ListVideo },
-    { to: "/idea-cards", label: "Idea Cards", icon: Star },
-    { to: "/script-generator", label: "Script Generator", icon: ListVideo },
-    { to: "/uploads", label: "Uploads", icon: Upload },
+    { to: "/pipeline", label: "Pipeline", icon: LayoutDashboard },
+    { to: "/scripting", label: "Scripting", icon: ListVideo },
+    { to: "/chunks", label: "Chunks", icon: Radio },
+    { to: "/audio", label: "Audio", icon: Radio },
+    { to: "/slides", label: "Slides", icon: ListVideo },
+    { to: "/annotations", label: "Annotations", icon: ListVideo },
+    { to: "/master-video", label: "Master Video", icon: ListVideo },
+    { to: "/youtube", label: "YouTube", icon: ListVideo },
+    { to: "/gamma-player", label: "Gamma Player", icon: ListVideo },
+    { to: "/history", label: "History", icon: ListVideo },
+    { to: "/storage", label: "Storage", icon: ListVideo },
+    { to: "/settings", label: "Settings", icon: ListVideo },
   ];
 
   return (

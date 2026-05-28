@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardUploadsRouteImport } from './routes/_dashboard.uploads'
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
 import { Route as DashboardScriptGeneratorRouteImport } from './routes/_dashboard.script-generator'
 import { Route as DashboardIdeaCardsRouteImport } from './routes/_dashboard.idea-cards'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardUploadsRoute = DashboardUploadsRouteImport.update({
+  id: '/uploads',
+  path: '/uploads',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSourcesRoute = DashboardSourcesRouteImport.update({
   id: '/sources',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/idea-cards': typeof DashboardIdeaCardsRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
   '/sources': typeof DashboardSourcesRoute
+  '/uploads': typeof DashboardUploadsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/idea-cards': typeof DashboardIdeaCardsRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
   '/sources': typeof DashboardSourcesRoute
+  '/uploads': typeof DashboardUploadsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_dashboard/idea-cards': typeof DashboardIdeaCardsRoute
   '/_dashboard/script-generator': typeof DashboardScriptGeneratorRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
+  '/_dashboard/uploads': typeof DashboardUploadsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/idea-cards'
     | '/script-generator'
     | '/sources'
+    | '/uploads'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/idea-cards'
     | '/script-generator'
     | '/sources'
+    | '/uploads'
   id:
     | '__root__'
     | '/'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/_dashboard/idea-cards'
     | '/_dashboard/script-generator'
     | '/_dashboard/sources'
+    | '/_dashboard/uploads'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -127,6 +139,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/uploads': {
+      id: '/_dashboard/uploads'
+      path: '/uploads'
+      fullPath: '/uploads'
+      preLoaderRoute: typeof DashboardUploadsRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/_dashboard/sources': {
       id: '/_dashboard/sources'
@@ -172,6 +191,7 @@ interface DashboardRouteChildren {
   DashboardIdeaCardsRoute: typeof DashboardIdeaCardsRoute
   DashboardScriptGeneratorRoute: typeof DashboardScriptGeneratorRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
+  DashboardUploadsRoute: typeof DashboardUploadsRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -180,6 +200,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIdeaCardsRoute: DashboardIdeaCardsRoute,
   DashboardScriptGeneratorRoute: DashboardScriptGeneratorRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
+  DashboardUploadsRoute: DashboardUploadsRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

@@ -149,7 +149,7 @@ const SourceInput = z.object({
 export const addSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SourceInput.parse(d))
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("sources_master").insert(data);
+    const { error } = await supabaseAdmin.from("sources_master").upsert(data, { onConflict: 'source_url', ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -165,7 +165,7 @@ export const deleteSource = createServerFn({ method: "POST" })
 export const bulkAddSources = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.array(SourceInput).parse(d))
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("sources_master").insert(data);
+    const { error } = await supabaseAdmin.from("sources_master").upsert(data, { onConflict: 'source_url', ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { ok: true, count: data.length };
   });

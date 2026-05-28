@@ -100,6 +100,21 @@ function ScriptGenerator() {
       
       if (fileType === 'pdf') {
         const arrayBuffer = await file.arrayBuffer();
+        
+        // Ensure pdfjsLib is loaded
+        if (!pdfjsLib && typeof window !== 'undefined') {
+          try {
+            const mod = await import("pdfjs-dist");
+            pdfjsLib = mod;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          } catch (e) {
+            console.error("Delayed PDF.js load failed:", e);
+            throw new Error("Could not initialize PDF reader. Please try refreshing.");
+          }
+        }
+
+        if (!pdfjsLib) throw new Error("PDF library not ready");
+
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
         let fullText = "";

@@ -45,10 +45,10 @@ function ScriptGenerator() {
 
       if (error) throw error;
       setSegments(data.segments || []);
-      toast({ title: "Success", description: "Script generated successfully!" });
+      toast.success("Script generated successfully!");
     } catch (err: any) {
       console.error(err);
-      toast({ title: "Error", description: err.message || "Failed to generate script", variant: "destructive" });
+      toast.error(err.message || "Failed to generate script");
     } finally {
       setIsGenerating(false);
     }

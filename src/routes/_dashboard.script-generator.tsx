@@ -260,8 +260,9 @@ function ScriptGenerator() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>UPLOAD *</Label>
+                    <Label htmlFor="pdf-upload" className="cursor-pointer">UPLOAD * (PDF, MD, JSON)</Label>
                     <input
+                      id="pdf-upload"
                       type="file"
                       ref={fileInputRef}
                       onChange={handleFileUpload}

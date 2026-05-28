@@ -22,6 +22,12 @@ function UploadsPage() {
   const [files, setFiles] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pendingFile, setPendingFile] = useState<{
+    file: File;
+    filePath: string;
+  } | null>(null);
+  const [customName, setCustomName] = useState("");
+  const [isNamingDialogOpen, setIsNamingDialogOpen] = useState(false);
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -55,24 +61,17 @@ function UploadsPage() {
 
     try {
       // 1. Upload to Storage
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("uploads")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Save to Database
-      const { error: dbError } = await supabase.from("user_uploads").insert({
-        file_name: file.name,
-        file_path: filePath,
-        file_type: file.type,
-        file_size: file.size,
-      });
-
-      if (dbError) throw dbError;
-
-      toast.success("File uploaded successfully");
-      fetchFiles();
+      // 2. Open dialog to ask for name
+      setPendingFile({ file, filePath });
+      setCustomName(file.name.split(".")[0]); // Default to original name without extension
+      setIsNamingDialogOpen(true);
+      
     } catch (error: any) {
       toast.error(error.message || "Upload failed");
       console.error(error);
@@ -81,6 +80,44 @@ function UploadsPage() {
       // Reset input
       e.target.value = "";
     }
+  };
+
+  const confirmUpload = async () => {
+    if (!pendingFile) return;
+
+    try {
+      setUploading(true);
+      const { error: dbError } = await supabase.from("user_uploads").insert({
+        file_name: pendingFile.file.name,
+        display_name: customName || pendingFile.file.name,
+        file_path: pendingFile.filePath,
+        file_type: pendingFile.file.type,
+        file_size: pendingFile.file.size,
+      });
+
+      if (dbError) throw dbError;
+
+      toast.success("File uploaded successfully");
+      setIsNamingDialogOpen(false);
+      setPendingFile(null);
+      setCustomName("");
+      fetchFiles();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save file info");
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const cancelUpload = async () => {
+    if (!pendingFile) return;
+    
+    // Clean up uploaded file if user cancels
+    await supabase.storage.from("uploads").remove([pendingFile.filePath]);
+    setPendingFile(null);
+    setIsNamingDialogOpen(false);
+    setCustomName("");
   };
 
   const handleDelete = async (file: any) => {
@@ -105,6 +142,21 @@ function UploadsPage() {
     } catch (error: any) {
       toast.error(error.message || "Delete failed");
       console.error(error);
+    }
+  };
+
+  const handleRename = async (fileId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_uploads")
+        .update({ display_name: newName })
+        .eq("id", fileId);
+
+      if (error) throw error;
+      toast.success("File renamed");
+      setFiles(files.map(f => f.id === fileId ? { ...f, display_name: newName } : f));
+    } catch (error: any) {
+      toast.error(error.message || "Rename failed");
     }
   };
 
@@ -137,7 +189,8 @@ function UploadsPage() {
   };
 
   const copyReference = (file: any) => {
-    const ref = `[File: ${file.file_name} (ID: ${file.id})]`;
+    const name = file.display_name || file.file_name;
+    const ref = `[File: ${name} (ID: ${file.id})]`;
     navigator.clipboard.writeText(ref);
     toast.success("Reference copied to clipboard");
   };
@@ -150,7 +203,7 @@ function UploadsPage() {
     if (isImage) {
       return (
         <div className="aspect-video w-full overflow-hidden rounded-md mb-4 bg-muted flex items-center justify-center">
-          <img src={publicUrl} alt={file.file_name} className="object-contain max-h-full" />
+          <img src={publicUrl} alt={file.display_name || file.file_name} className="object-contain max-h-full" />
         </div>
       );
     }
@@ -206,6 +259,39 @@ function UploadsPage() {
         </div>
       </div>
 
+      <Dialog open={isNamingDialogOpen} onOpenChange={(open) => !open && cancelUpload()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name your file</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Give this file a name to make it easier to recall in chat.
+              </p>
+              <Input
+                placeholder="Enter file name..."
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmUpload();
+                }}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={cancelUpload}>
+                Cancel
+              </Button>
+              <Button onClick={confirmUpload} disabled={uploading}>
+                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Save & Upload
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           <div className="col-span-full flex justify-center py-12">
@@ -222,7 +308,7 @@ function UploadsPage() {
             <Card key={file.id} className="overflow-hidden border-border/50 hover:border-border transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-semibold truncate max-w-[180px]">
-                  {file.file_name}
+                  {file.display_name || file.file_name}
                 </CardTitle>
                 <div className="flex gap-1">
                   <Dialog>
@@ -233,11 +319,15 @@ function UploadsPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl">
                       <DialogHeader>
-                        <DialogTitle>{file.file_name}</DialogTitle>
+                        <DialogTitle>{file.display_name || file.file_name}</DialogTitle>
                       </DialogHeader>
                       <div className="mt-4">
                         {renderPreview(file)}
                         <div className="grid grid-cols-2 gap-4 text-sm mt-4 p-4 rounded-lg bg-muted/50 border">
+                          <div>
+                            <p className="text-muted-foreground">Original Name</p>
+                            <p className="font-medium truncate">{file.file_name}</p>
+                          </div>
                           <div>
                             <p className="text-muted-foreground">Type</p>
                             <p className="font-medium">{file.file_type}</p>
@@ -249,10 +339,6 @@ function UploadsPage() {
                           <div>
                             <p className="text-muted-foreground">Uploaded At</p>
                             <p className="font-medium">{new Date(file.created_at).toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">ID</p>
-                            <p className="font-medium font-mono text-xs">{file.id}</p>
                           </div>
                         </div>
                       </div>

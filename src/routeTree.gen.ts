@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
+import { Route as DashboardScriptGeneratorRouteImport } from './routes/_dashboard.script-generator'
 import { Route as DashboardIdeaCardsRouteImport } from './routes/_dashboard.idea-cards'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard.dashboard'
 import { Route as DashboardContentPreviewRouteImport } from './routes/_dashboard.content-preview'
@@ -30,6 +31,12 @@ const DashboardSourcesRoute = DashboardSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardScriptGeneratorRoute =
+  DashboardScriptGeneratorRouteImport.update({
+    id: '/script-generator',
+    path: '/script-generator',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardIdeaCardsRoute = DashboardIdeaCardsRouteImport.update({
   id: '/idea-cards',
   path: '/idea-cards',
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
+  '/script-generator': typeof DashboardScriptGeneratorRoute
   '/sources': typeof DashboardSourcesRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
   '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
+  '/script-generator': typeof DashboardScriptGeneratorRoute
   '/sources': typeof DashboardSourcesRoute
 }
 export interface FileRoutesById {
@@ -67,6 +76,7 @@ export interface FileRoutesById {
   '/_dashboard/content-preview': typeof DashboardContentPreviewRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/idea-cards': typeof DashboardIdeaCardsRoute
+  '/_dashboard/script-generator': typeof DashboardScriptGeneratorRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
 }
 export interface FileRouteTypes {
@@ -76,9 +86,16 @@ export interface FileRouteTypes {
     | '/content-preview'
     | '/dashboard'
     | '/idea-cards'
+    | '/script-generator'
     | '/sources'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/content-preview' | '/dashboard' | '/idea-cards' | '/sources'
+  to:
+    | '/'
+    | '/content-preview'
+    | '/dashboard'
+    | '/idea-cards'
+    | '/script-generator'
+    | '/sources'
   id:
     | '__root__'
     | '/'
@@ -86,6 +103,7 @@ export interface FileRouteTypes {
     | '/_dashboard/content-preview'
     | '/_dashboard/dashboard'
     | '/_dashboard/idea-cards'
+    | '/_dashboard/script-generator'
     | '/_dashboard/sources'
   fileRoutesById: FileRoutesById
 }
@@ -117,6 +135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSourcesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/script-generator': {
+      id: '/_dashboard/script-generator'
+      path: '/script-generator'
+      fullPath: '/script-generator'
+      preLoaderRoute: typeof DashboardScriptGeneratorRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/idea-cards': {
       id: '/_dashboard/idea-cards'
       path: '/idea-cards'
@@ -145,6 +170,7 @@ interface DashboardRouteChildren {
   DashboardContentPreviewRoute: typeof DashboardContentPreviewRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardIdeaCardsRoute: typeof DashboardIdeaCardsRoute
+  DashboardScriptGeneratorRoute: typeof DashboardScriptGeneratorRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
 }
 
@@ -152,6 +178,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardContentPreviewRoute: DashboardContentPreviewRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardIdeaCardsRoute: DashboardIdeaCardsRoute,
+  DashboardScriptGeneratorRoute: DashboardScriptGeneratorRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
 }
 
@@ -166,3 +193,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -91,8 +91,6 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
     let totalProcessed = 0;
     const errors: string[] = [];
 
-    // Process sources sequentially to avoid overwhelming Apify concurrency limits
-    // but parallelize videos within each source.
     for (const source of sources) {
       try {
         console.log(`Scraping channel: ${source.channel_name} (${source.source_url})`);
@@ -105,77 +103,82 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
         console.log(`Found ${videos.length} videos for ${source.channel_name}`);
         
         const videoPromises = videos.slice(0, 3).map(async (v) => {
-          const videoUrl: string = v.url || v.videoUrl;
-          if (!videoUrl) return null;
-
-          // dedupe
-          const { data: existing } = await supabaseAdmin
-            .from("raw_content")
-            .select("id")
-            .eq("video_url", videoUrl)
-            .maybeSingle();
-          if (existing) {
-            console.log(`Video already exists: ${v.title}`);
-            return null;
-          }
-
-          console.log(`Processing video: ${v.title} (${videoUrl})`);
-
-          // transcript
-          let transcript = "";
           try {
-          console.log(`Inserting raw_content for: ${v.title}`);
-          
-          // Fix for relative dates from YouTube scraper (e.g. "5 hours ago")
-          let pubDate = v.date || v.publishedAt || null;
-          if (pubDate && isNaN(Date.parse(pubDate))) {
-            console.log(`Non-standard date detected: ${pubDate}. Setting to null.`);
-            pubDate = null; 
+            const videoUrl: string = v.url || v.videoUrl;
+            if (!videoUrl) return null;
+
+            // dedupe
+            const { data: existing } = await supabaseAdmin
+              .from("raw_content")
+              .select("id")
+              .eq("video_url", videoUrl)
+              .maybeSingle();
+            
+            if (existing) {
+              console.log(`Video already exists: ${v.title}`);
+              return null;
+            }
+
+            console.log(`Processing video: ${v.title} (${videoUrl})`);
+
+            // transcript
+            let transcript = "";
+            try {
+              const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl }, token);
+              transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 8000);
+            } catch (e) {
+              console.warn(`Transcript failed for ${v.title}, falling back to description.`);
+              transcript = v.text || v.description || "";
+            }
+
+            const aiInput = `Channel: ${source.channel_name}
+Original Title: ${v.title}
+Views: ${v.viewCount ?? v.views ?? "N/A"}
+Duration: ${v.duration ?? "N/A"}
+
+Transcript / Description:
+${transcript || v.description || "(no transcript available)"}`;
+
+            console.log(`Calling AI for: ${v.title}`);
+            const ai = await callAI(aiInput, SYSTEM_PROMPT);
+            
+            // Fix for relative dates from YouTube scraper (e.g. "5 hours ago")
+            let pubDate = v.date || v.publishedAt || null;
+            if (pubDate && isNaN(Date.parse(pubDate))) {
+              console.log(`Non-standard date detected: ${pubDate}. Setting to null.`);
+              pubDate = null; 
+            }
+
+            console.log(`Inserting raw_content for: ${v.title}`);
+            const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
+              source_id: source.id,
+              video_url: videoUrl,
+              original_summary: transcript.slice(0, 2000),
+              views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
+              published_date: pubDate,
+              duration: v.duration?.toString() ?? null,
+              thumbnail_url: v.thumbnailUrl || v.thumbnail || null,
+              original_title: v.title,
+              proposed_title: ai.proposed_title,
+              new_thumbnail_outline: ai.new_thumbnail_outline,
+              target_audience: ai.target_audience,
+              core_hooks: ai.core_hooks ?? [],
+              summary_points: ai.summary_points ?? [],
+              video_outline: ai.video_outline ?? {},
+              status: "Pending",
+            });
+
+            if (insErr) {
+              console.error(`Insert failed for ${v.title}:`, insErr);
+              throw insErr;
+            }
+
+            console.log(`Successfully inserted: ${v.title}`);
+            return true;
+          } catch (e: any) {
+            console.error(`Failed to process video ${v.title}:`, e);
+            throw e;
           }
-
-          const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
-            source_id: source.id,
-            video_url: videoUrl,
-            original_summary: transcript.slice(0, 2000),
-            views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
-            published_date: pubDate,
-            duration: v.duration?.toString() ?? null,
-            thumbnail_url: v.thumbnailUrl || v.thumbnail || null,
-            original_title: v.title,
-            proposed_title: ai.proposed_title,
-            new_thumbnail_outline: ai.new_thumbnail_outline,
-            target_audience: ai.target_audience,
-            core_hooks: ai.core_hooks ?? [],
-            summary_points: ai.summary_points ?? [],
-            video_outline: ai.video_outline ?? {},
-            status: "Pending",
-          });
-          console.log(`Inserting raw_content for: ${v.title}`);
-          const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
-            source_id: source.id,
-            video_url: videoUrl,
-            original_summary: transcript.slice(0, 2000),
-            views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
-            published_date: v.date || v.publishedAt || null,
-            duration: v.duration?.toString() ?? null,
-            thumbnail_url: v.thumbnailUrl || v.thumbnail || null,
-            original_title: v.title,
-            proposed_title: ai.proposed_title,
-            new_thumbnail_outline: ai.new_thumbnail_outline,
-            target_audience: ai.target_audience,
-            core_hooks: ai.core_hooks ?? [],
-            summary_points: ai.summary_points ?? [],
-            video_outline: ai.video_outline ?? {},
-            status: "Pending",
-          });
-
-          if (insErr) {
-            console.error(`Insert failed for ${v.title}:`, insErr);
-            throw insErr;
-          }
-
-          console.log(`Successfully inserted: ${v.title}`);
-          return true;
         });
 
         const results = await Promise.allSettled(videoPromises);

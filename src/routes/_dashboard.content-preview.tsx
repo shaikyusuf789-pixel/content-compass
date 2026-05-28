@@ -88,8 +88,7 @@ function ContentPreviewPage() {
                 <TableRow key={idea.id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                   <TableCell className="font-semibold text-primary/80">
-                    {/* Note: source name would ideally be joined in SQL, but for now we rely on DB info if available or show Source ID */}
-                    {idea.channel_name || "YouTube Source"}
+                    {idea.sources_master?.channel_name || "YouTube Source"}
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate" title={idea.original_title}>
                     {idea.original_title}

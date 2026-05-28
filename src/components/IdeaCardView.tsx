@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { Eye, Calendar, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, Calendar, Clock, ExternalLink, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ActionKey = "approve" | "reject" | "priority" | "done" | "generate";

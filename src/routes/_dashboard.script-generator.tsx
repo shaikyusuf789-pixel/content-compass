@@ -12,8 +12,8 @@ import { Loader2, Plus, Trash2, Wand2, FileText, CheckCircle2, X } from "lucide-
 import { toast } from "sonner";
 import * as pdfjsLib from "pdfjs-dist";
 
-// Set worker for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// PDF.js worker setup is done inside the component to avoid SSR issues
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_dashboard/script-generator")({

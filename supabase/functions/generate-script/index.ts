@@ -33,12 +33,12 @@ serve(async (req) => {
       if (!apiKey) throw new Error("POE_API_KEY is not set in secrets. Please add it in Settings > Secrets.");
       apiUrl = "https://api.poe.com/v1/chat/completions";
       
-      // Map to Poe Bot Names
+      // Map to Poe Bot Names (Updated for 2026)
       const poeMap: Record<string, string> = {
-        "claude-3-5-sonnet": "Claude-3.5-Sonnet",
-        "claude-3-opus": "Claude-3-Opus",
+        "claude-3-5-sonnet": "Claude-Sonnet-4.6",
+        "claude-3-opus": "Claude-Opus-4.7",
         "gpt-4o": "GPT-4o",
-        "gemini-1.5-pro": "Gemini-1.5-Pro"
+        "gemini-1.5-pro": "Gemini-2.0-Pro"
       };
       finalModel = poeMap[model] || model;
 

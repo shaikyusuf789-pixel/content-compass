@@ -71,12 +71,35 @@ function ScriptGenerator() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Configuration */}
+        {/* Left: Configuration */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Script Input</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <select className="w-full border rounded-md p-2 text-sm">
+                      <option>Poe.com (Multi-Model)</option>
+                      <option>Claude (via PageGrid)</option>
+                      <option>OpenAI (GPT)</option>
+                      <option>Google (Gemini)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Model</Label>
+                    <select className="w-full border rounded-md p-2 text-sm">
+                      <option>Claude-Opus-4.7</option>
+                      <option>Claude-Sonnet-4.6</option>
+                      <option>GPT-4o</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <Label>Video Type</Label>
                 <RadioGroup 

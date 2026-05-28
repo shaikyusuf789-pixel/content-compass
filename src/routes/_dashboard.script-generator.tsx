@@ -446,8 +446,13 @@ function ScriptGenerator() {
                             className="bg-blue-600 hover:bg-blue-700"
                             onClick={(e) => {
                               e.preventDefault();
-                              console.log("Upload button clicked, triggering file input");
-                              fileInputRef.current?.click();
+                              console.log("Upload button clicked, triggering file input:", fileInputRef.current);
+                              if (fileInputRef.current) {
+                                fileInputRef.current.click();
+                              } else {
+                                // Fallback using DOM ID
+                                document.getElementById('pdf-upload-hidden')?.click();
+                              }
                             }}
                             disabled={isUploading}
                           >

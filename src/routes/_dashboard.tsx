@@ -1,4 +1,4 @@
-import { createFileRoute, useRouterState, Link } from "@tanstack/react-router";
+import { createFileRoute, useRouterState, Link, Outlet } from "@tanstack/react-router";
 import { 
   LayoutDashboard, 
   ListVideo, 
@@ -12,9 +12,7 @@ import {
   Mic2,
   Layers,
   StickyNote,
-  Trash2,
-  ChevronRight,
-  Plus
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,10 +21,23 @@ export const Route = createFileRoute("/_dashboard")({
   component: DashboardLayout,
 });
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: any;
+  number?: string;
+  badge?: string;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
 function DashboardLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
-  const navGroups = [
+  const navGroups: NavGroup[] = [
     {
       label: "PIPELINE",
       items: [

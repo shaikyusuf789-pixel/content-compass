@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { z } from "zod";
 
@@ -61,7 +60,6 @@ JSON schema:
 }`;
 
 export const runIdeaEngine = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .handler(async () => {
     const token = process.env.APIFY_API_TOKEN;
     if (!token) throw new Error("APIFY_API_TOKEN not configured");
@@ -149,19 +147,17 @@ const SourceInput = z.object({
 });
 
 export const addSource = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SourceInput.parse(d))
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("sources_master").insert(data);
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.from("sources_master").insert(data);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const deleteSource = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("sources_master").delete().eq("id", data.id);
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.from("sources_master").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

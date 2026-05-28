@@ -113,7 +113,9 @@ Duration: ${v.duration ?? "N/A"}
 Transcript / Description:
 ${transcript || v.description || "(no transcript available)"}`;
 
+          console.log(`Calling AI for: ${v.title}`);
           const ai = await callAI(aiInput, SYSTEM_PROMPT);
+          console.log("AI Response received");
 
           await supabaseAdmin.from("raw_content").insert({
             source_id: source.id,

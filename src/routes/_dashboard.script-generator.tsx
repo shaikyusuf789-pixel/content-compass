@@ -36,7 +36,7 @@ function ScriptGenerator() {
 
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
   const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf" | "idea">(
-    search.transcript ? "transcript" : "topic"
+    search.ideaId ? "idea" : search.transcript ? "transcript" : "topic"
   );
   const [topic, setTopic] = useState(search.topic || "");
   const [chapterContext, setChapterContext] = useState("");

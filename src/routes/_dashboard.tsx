@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useRouterState, Link } from "@tanstack/react-router";
-import { LayoutDashboard, ListVideo, Radio } from "lucide-react";
+import { LayoutDashboard, ListVideo, Radio, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_dashboard")({

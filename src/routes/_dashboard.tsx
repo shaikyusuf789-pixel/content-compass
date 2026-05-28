@@ -12,7 +12,8 @@ function DashboardLayout() {
   const nav = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/sources", label: "Sources", icon: Radio },
-    { to: "/raw-content", label: "Raw Content", icon: ListVideo },
+    { to: "/content-preview", label: "Content Preview", icon: ListVideo },
+    { to: "/idea-cards", label: "Idea Cards", icon: Star },
   ];
 
   return (

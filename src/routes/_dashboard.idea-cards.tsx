@@ -18,7 +18,7 @@ import { getIdeas, updateIdeaStatus } from "@/lib/engine.functions";
 import { IdeaCardView, type ActionKey, type IdeaCard } from "@/components/IdeaCardView";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_dashboard/raw-content")({
+export const Route = createFileRoute("/_dashboard/idea-cards")({
   component: RawContentPage,
   head: () => ({ meta: [{ title: "Idea Reels — Sky Intel" }] }),
 });

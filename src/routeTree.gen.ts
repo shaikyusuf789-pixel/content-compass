@@ -12,8 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
-import { Route as DashboardRawContentRouteImport } from './routes/_dashboard.raw-content'
+import { Route as DashboardIdeaCardsRouteImport } from './routes/_dashboard.idea-cards'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard.dashboard'
+import { Route as DashboardContentPreviewRouteImport } from './routes/_dashboard.content-preview'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
@@ -29,9 +30,9 @@ const DashboardSourcesRoute = DashboardSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardRawContentRoute = DashboardRawContentRouteImport.update({
-  id: '/raw-content',
-  path: '/raw-content',
+const DashboardIdeaCardsRoute = DashboardIdeaCardsRouteImport.update({
+  id: '/idea-cards',
+  path: '/idea-cards',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
@@ -39,38 +40,52 @@ const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardContentPreviewRoute = DashboardContentPreviewRouteImport.update({
+  id: '/content-preview',
+  path: '/content-preview',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
-  '/raw-content': typeof DashboardRawContentRoute
+  '/idea-cards': typeof DashboardIdeaCardsRoute
   '/sources': typeof DashboardSourcesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
-  '/raw-content': typeof DashboardRawContentRoute
+  '/idea-cards': typeof DashboardIdeaCardsRoute
   '/sources': typeof DashboardSourcesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_dashboard': typeof DashboardRouteWithChildren
+  '/_dashboard/content-preview': typeof DashboardContentPreviewRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
-  '/_dashboard/raw-content': typeof DashboardRawContentRoute
+  '/_dashboard/idea-cards': typeof DashboardIdeaCardsRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/raw-content' | '/sources'
+  fullPaths:
+    | '/'
+    | '/content-preview'
+    | '/dashboard'
+    | '/idea-cards'
+    | '/sources'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/raw-content' | '/sources'
+  to: '/' | '/content-preview' | '/dashboard' | '/idea-cards' | '/sources'
   id:
     | '__root__'
     | '/'
     | '/_dashboard'
+    | '/_dashboard/content-preview'
     | '/_dashboard/dashboard'
-    | '/_dashboard/raw-content'
+    | '/_dashboard/idea-cards'
     | '/_dashboard/sources'
   fileRoutesById: FileRoutesById
 }
@@ -102,11 +117,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSourcesRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/raw-content': {
-      id: '/_dashboard/raw-content'
-      path: '/raw-content'
-      fullPath: '/raw-content'
-      preLoaderRoute: typeof DashboardRawContentRouteImport
+    '/_dashboard/idea-cards': {
+      id: '/_dashboard/idea-cards'
+      path: '/idea-cards'
+      fullPath: '/idea-cards'
+      preLoaderRoute: typeof DashboardIdeaCardsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/dashboard': {
@@ -116,18 +131,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/content-preview': {
+      id: '/_dashboard/content-preview'
+      path: '/content-preview'
+      fullPath: '/content-preview'
+      preLoaderRoute: typeof DashboardContentPreviewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardContentPreviewRoute: typeof DashboardContentPreviewRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
-  DashboardRawContentRoute: typeof DashboardRawContentRoute
+  DashboardIdeaCardsRoute: typeof DashboardIdeaCardsRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardContentPreviewRoute: DashboardContentPreviewRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
-  DashboardRawContentRoute: DashboardRawContentRoute,
+  DashboardIdeaCardsRoute: DashboardIdeaCardsRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
 }
 
@@ -142,3 +166,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

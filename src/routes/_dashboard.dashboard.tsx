@@ -105,41 +105,45 @@ function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-card p-1 shadow-sm">
-            <Select 
-              value={autoRun.data?.interval_hrs?.toString() || "1"} 
-              onValueChange={(v) => updateAutoRun.mutate({ 
-                enabled: autoRun.data?.enabled ?? false, 
-                interval_hrs: parseInt(v) 
-              })}
-            >
-              <SelectTrigger className="h-8 w-[120px] border-none bg-transparent shadow-none focus:ring-0">
-                <Clock className="mr-2 h-3.5 w-3.5" />
-                <SelectValue placeholder="Interval" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Every 1 hr</SelectItem>
-                <SelectItem value="2">Every 2 hrs</SelectItem>
-                <SelectItem value="6">Every 6 hrs</SelectItem>
-                <SelectItem value="12">Every 12 hrs</SelectItem>
-                <SelectItem value="24">Every 24 hrs</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-6 rounded-lg border bg-card px-4 py-2 shadow-sm">
+            <div className="flex flex-col gap-1.5 min-w-[140px]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Interval</span>
+                <span className="text-[10px] font-bold text-primary">{sliderValue[0]} hrs</span>
+              </div>
+              <Slider
+                value={sliderValue}
+                onValueChange={setSliderValue}
+                onValueCommit={(v) => updateAutoRun.mutate({ 
+                  enabled: autoRun.data?.enabled ?? false, 
+                  interval_hrs: v[0] 
+                })}
+                min={1}
+                max={24}
+                step={1}
+                className="w-full"
+              />
+            </div>
 
-            <div className="h-4 w-px bg-border mx-1" />
+            <div className="h-8 w-px bg-border" />
 
-            <Button 
-              variant={autoRun.data?.enabled ? "default" : "outline"}
-              size="sm"
-              className={`h-8 gap-2 ${autoRun.data?.enabled ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
-              onClick={() => updateAutoRun.mutate({ 
-                enabled: !autoRun.data?.enabled, 
-                interval_hrs: autoRun.data?.interval_hrs ?? 1 
-              })}
-              disabled={updateAutoRun.isPending}
-            >
-              <Activity className={`h-3.5 w-3.5 ${autoRun.data?.enabled ? "animate-pulse" : ""}`} />
-              {autoRun.data?.enabled ? "Auto run: ON" : "Auto run: OFF"}
-            </Button>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Auto Run</span>
+              <div className="flex items-center gap-2">
+                <Switch 
+                  checked={autoRun.data?.enabled ?? false}
+                  onCheckedChange={(checked) => updateAutoRun.mutate({ 
+                    enabled: checked, 
+                    interval_hrs: autoRun.data?.interval_hrs ?? 1 
+                  })}
+                  disabled={updateAutoRun.isPending}
+                />
+                <span className={`text-xs font-semibold ${autoRun.data?.enabled ? "text-green-600" : "text-muted-foreground"}`}>
+                  {autoRun.data?.enabled ? "ON" : "OFF"}
+                </span>
+              </div>
+            </div>
+          </div>
           </div>
 
           <Button onClick={() => run.mutate()} disabled={run.isPending} variant="secondary" size="sm" className="h-8">

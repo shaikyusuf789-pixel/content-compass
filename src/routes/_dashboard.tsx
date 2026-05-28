@@ -42,7 +42,7 @@ function DashboardLayout() {
       label: "PIPELINE",
       items: [
         { to: "/pipeline", label: "Pipeline", icon: LayoutDashboard },
-        { to: "/scripting", label: "Scripting", icon: StickyNote, number: "1" },
+        { to: "/script-generator", label: "Scripting", icon: StickyNote, number: "1" },
         { to: "/chunks", label: "Chunks", icon: Layers, number: "2" },
         { to: "/audio", label: "Audio", icon: Mic2, number: "3" },
         { to: "/slides", label: "Slides", icon: FileVideo, number: "4" },

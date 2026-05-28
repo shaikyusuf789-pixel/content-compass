@@ -17,7 +17,6 @@ import { Route as DashboardStorageRouteImport } from './routes/_dashboard.storag
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
 import { Route as DashboardSlidesRouteImport } from './routes/_dashboard.slides'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
-import { Route as DashboardScriptingRouteImport } from './routes/_dashboard.scripting'
 import { Route as DashboardScriptGeneratorRouteImport } from './routes/_dashboard.script-generator'
 import { Route as DashboardPipelineRouteImport } from './routes/_dashboard.pipeline'
 import { Route as DashboardMasterVideoRouteImport } from './routes/_dashboard.master-video'
@@ -67,11 +66,6 @@ const DashboardSlidesRoute = DashboardSlidesRouteImport.update({
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardScriptingRoute = DashboardScriptingRouteImport.update({
-  id: '/scripting',
-  path: '/scripting',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardScriptGeneratorRoute =
@@ -144,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/master-video': typeof DashboardMasterVideoRoute
   '/pipeline': typeof DashboardPipelineRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
-  '/scripting': typeof DashboardScriptingRoute
   '/settings': typeof DashboardSettingsRoute
   '/slides': typeof DashboardSlidesRoute
   '/sources': typeof DashboardSourcesRoute
@@ -165,7 +158,6 @@ export interface FileRoutesByTo {
   '/master-video': typeof DashboardMasterVideoRoute
   '/pipeline': typeof DashboardPipelineRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
-  '/scripting': typeof DashboardScriptingRoute
   '/settings': typeof DashboardSettingsRoute
   '/slides': typeof DashboardSlidesRoute
   '/sources': typeof DashboardSourcesRoute
@@ -188,7 +180,6 @@ export interface FileRoutesById {
   '/_dashboard/master-video': typeof DashboardMasterVideoRoute
   '/_dashboard/pipeline': typeof DashboardPipelineRoute
   '/_dashboard/script-generator': typeof DashboardScriptGeneratorRoute
-  '/_dashboard/scripting': typeof DashboardScriptingRoute
   '/_dashboard/settings': typeof DashboardSettingsRoute
   '/_dashboard/slides': typeof DashboardSlidesRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
@@ -211,7 +202,6 @@ export interface FileRouteTypes {
     | '/master-video'
     | '/pipeline'
     | '/script-generator'
-    | '/scripting'
     | '/settings'
     | '/slides'
     | '/sources'
@@ -232,7 +222,6 @@ export interface FileRouteTypes {
     | '/master-video'
     | '/pipeline'
     | '/script-generator'
-    | '/scripting'
     | '/settings'
     | '/slides'
     | '/sources'
@@ -254,7 +243,6 @@ export interface FileRouteTypes {
     | '/_dashboard/master-video'
     | '/_dashboard/pipeline'
     | '/_dashboard/script-generator'
-    | '/_dashboard/scripting'
     | '/_dashboard/settings'
     | '/_dashboard/slides'
     | '/_dashboard/sources'
@@ -324,13 +312,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/scripting': {
-      id: '/_dashboard/scripting'
-      path: '/scripting'
-      fullPath: '/scripting'
-      preLoaderRoute: typeof DashboardScriptingRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/script-generator': {
@@ -425,7 +406,6 @@ interface DashboardRouteChildren {
   DashboardMasterVideoRoute: typeof DashboardMasterVideoRoute
   DashboardPipelineRoute: typeof DashboardPipelineRoute
   DashboardScriptGeneratorRoute: typeof DashboardScriptGeneratorRoute
-  DashboardScriptingRoute: typeof DashboardScriptingRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSlidesRoute: typeof DashboardSlidesRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
@@ -446,7 +426,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMasterVideoRoute: DashboardMasterVideoRoute,
   DashboardPipelineRoute: DashboardPipelineRoute,
   DashboardScriptGeneratorRoute: DashboardScriptGeneratorRoute,
-  DashboardScriptingRoute: DashboardScriptingRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSlidesRoute: DashboardSlidesRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
@@ -466,3 +445,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

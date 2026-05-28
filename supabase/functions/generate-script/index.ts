@@ -14,6 +14,7 @@ serve(async (req) => {
     const { 
       topic, 
       content, 
+      chapterContext,
       videoType, 
       inputMode, 
       wordCount, 
@@ -144,7 +145,7 @@ Return ONLY a valid JSON array. No preamble, no markdown fences, no explanation 
     if (inputMode === "transcript") {
       userPrompt = `Generate a SKY Academy Telugu script based on this TRANSCRIPT:\n---\n${content}\n---\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
     } else if (inputMode === "pdf") {
-      userPrompt = `Generate a SKY Academy Telugu script based on this BOOK/PDF TEXT:\n---\n${content}\n---\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
+      userPrompt = `Generate a SKY Academy Telugu script based on this BOOK/PDF/FILE TEXT:\n---\n${content}\n---\n${chapterContext ? `Context/Topic: ${chapterContext}\n` : ""}Video Type: ${videoType}\nSegments: ${numSegs}`;
     } else {
       userPrompt = `Generate a SKY Academy Telugu script on:\nTopic: ${topic}\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
     }

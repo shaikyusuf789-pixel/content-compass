@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Wand2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Wand2, FileText, CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Set worker for PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_dashboard/script-generator")({
@@ -28,6 +32,58 @@ function ScriptGenerator() {
   const [segments, setSegments] = useState<any[]>([]);
   const [provider, setProvider] = useState("poe");
   const [model, setModel] = useState("claude-3-5-sonnet");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setFileName(file.name);
+
+    try {
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+      
+      if (fileType === 'pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let fullText = "";
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(" ");
+          fullText += pageText + "\n";
+        }
+        setContent(fullText);
+      } else if (fileType === 'md' || fileType === 'json' || fileType === 'txt') {
+        const text = await file.text();
+        setContent(text);
+      } else {
+        toast.error("Unsupported file type. Please upload PDF, MD, or JSON.");
+        setFileName(null);
+      }
+      
+      toast.success(`${file.name} uploaded and processed!`);
+    } catch (error) {
+      console.error("File upload error:", error);
+      toast.error("Failed to process file");
+      setFileName(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeFile = () => {
+    setFileName(null);
+    setContent("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleGenerate = async () => {
     if (!topic && inputMode === "topic") {
@@ -45,6 +101,7 @@ function ScriptGenerator() {
         body: {
           topic,
           content,
+          chapterContext,
           videoType,
           inputMode,
           wordCount,
@@ -188,15 +245,53 @@ function ScriptGenerator() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Upload PDF *</Label>
+                    <Label>UPLOAD *</Label>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".pdf,.md,.json,.txt"
+                      className="hidden"
+                    />
                     <div className="border-2 border-dashed rounded-lg p-6 bg-slate-50 flex flex-col items-center justify-center space-y-3">
-                      <div className="flex items-center space-x-4">
-                        <Button variant="outline" className="bg-white">
-                          <Plus className="mr-2 h-4 w-4" />
-                          Upload
-                        </Button>
-                        <span className="text-xs text-muted-foreground">200MB per file • PDF</span>
-                      </div>
+                      {fileName ? (
+                        <div className="flex items-center justify-between w-full bg-white p-3 rounded-md border">
+                          <div className="flex items-center space-x-3">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium truncate max-w-[150px]">{fileName}</span>
+                              <span className="text-[10px] text-green-600 flex items-center">
+                                <CheckCircle2 className="h-3 w-3 mr-1" /> Ready for generation
+                              </span>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive"
+                            onClick={removeFile}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-4">
+                          <Button 
+                            variant="outline" 
+                            className="bg-white"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                          >
+                            {isUploading ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Plus className="mr-2 h-4 w-4" />
+                            )}
+                            Upload
+                          </Button>
+                          <span className="text-xs text-muted-foreground">200MB per file • PDF, MD, JSON</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

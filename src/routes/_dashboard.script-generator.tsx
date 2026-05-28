@@ -27,7 +27,7 @@ function ScriptGenerator() {
 
   const handleGenerate = async () => {
     if (!topic && inputMode === "topic") {
-      toast({ title: "Error", description: "Please enter a topic", variant: "destructive" });
+      toast.error("Please enter a topic");
       return;
     }
 

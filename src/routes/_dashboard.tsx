@@ -3,10 +3,10 @@ import { LayoutDashboard, ListVideo, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_dashboard")({
-  component: AuthedLayout,
+  component: DashboardLayout,
 });
 
-function AuthedLayout() {
+function DashboardLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const nav = [

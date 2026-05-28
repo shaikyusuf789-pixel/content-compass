@@ -61,6 +61,7 @@ JSON schema:
 
 export const runIdeaEngine = createServerFn({ method: "POST" })
   .handler(async () => {
+    console.log("Starting Idea Engine run...");
     const token = process.env.APIFY_API_TOKEN;
     if (!token) throw new Error("APIFY_API_TOKEN not configured");
 
@@ -84,6 +85,7 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
 
         for (const v of videos.slice(0, 3)) {
           const videoUrl: string = v.url || v.videoUrl;
+          console.log(`Processing video: ${v.title} (${videoUrl})`);
           if (!videoUrl) continue;
 
           // dedupe
@@ -111,7 +113,9 @@ Duration: ${v.duration ?? "N/A"}
 Transcript / Description:
 ${transcript || v.description || "(no transcript available)"}`;
 
+          console.log(`Calling AI for: ${v.title}`);
           const ai = await callAI(aiInput, SYSTEM_PROMPT);
+          console.log("AI Response received");
 
           await supabaseAdmin.from("raw_content").insert({
             source_id: source.id,

@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { z } from "zod";
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,16 +14,25 @@ import { toast } from "sonner";
 import * as pdfjsLib from "pdfjs-dist";
 import { supabase } from "@/integrations/supabase/client";
 
+const scriptSearchSchema = z.object({
+  transcript: z.string().optional(),
+  topic: z.string().optional(),
+});
+
 export const Route = createFileRoute("/_dashboard/script-generator")({
+  validateSearch: scriptSearchSchema,
   component: ScriptGenerator,
 });
 
 function ScriptGenerator() {
+  const search = useSearch({ from: "/_dashboard/script-generator" });
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
-  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">("topic");
-  const [topic, setTopic] = useState("");
+  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">(
+    search.transcript ? "transcript" : "topic"
+  );
+  const [topic, setTopic] = useState(search.topic || "");
   const [chapterContext, setChapterContext] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(search.transcript || "");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [wordCount, setWordCount] = useState(660);
   const [isGenerating, setIsGenerating] = useState(false);

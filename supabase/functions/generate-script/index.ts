@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, videoType, inputMode, wordCount, specialInstructions } = await req.json();
+    const { topic, content, videoType, inputMode, wordCount, specialInstructions } = await req.json();
 
     const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openAiApiKey) {
@@ -38,11 +38,30 @@ DNA RULES FOR SUBJECTIVE:
 5. Final Seg: Summarize and direct to the App for full test series.
     `;
 
-    const systemPrompt = `
+    let systemPromptBase = "";
+    if (inputMode === "transcript") {
+      systemPromptBase = `
+You are an expert Telugu video script writer for SKY Academy.
+Your task is to REWRITE the provided video transcript into a SKY Academy voiceover script.
+Keep the technical facts and core information, but change the delivery to match SKY Academy's educational DNA.
+      `;
+    } else if (inputMode === "pdf") {
+      systemPromptBase = `
+You are an expert Telugu video script writer for SKY Academy.
+Your task is to CREATE a SKY Academy video script based on the provided text from a book or PDF section.
+Translate and adapt the educational content into a clear, teaching-focused voiceover.
+      `;
+    } else {
+      systemPromptBase = `
 You are an expert Telugu video script writer for SKY Academy.
 Write a COMPLETE, ORIGINAL SKY Academy voiceover script on the given topic.
+      `;
+    }
 
-\${videoType === 'general' ? dnaGeneral : dnaSubjective}
+    const systemPrompt = `
+${systemPromptBase}
+
+${videoType === 'general' ? dnaGeneral : dnaSubjective}
 
 CRITICAL RULE 1: telugu_text must contain ZERO emoji characters.
 CRITICAL RULE 2: ALL numbers in telugu_text must be written as English words.
@@ -58,21 +77,42 @@ Return ONLY a valid JSON array. No preamble, no markdown fences, no explanation 
     "telugu_text": "full voiceover in TELUGU UNICODE SCRIPT -- NO EMOJIS"
   }
 ]
-- Generate exactly \${numSegs} segments
+- Generate exactly ${numSegs} segments
 - Each segment MUST be 150-180 words
 - ALL Telugu words in Telugu Unicode script
 - ALL numbers written as English words
     `;
 
-    const userPrompt = `
-Generate a complete SKY Academy Telugu video script on:
-
-**Topic:** \${topic}
-**Video Type:** \${videoType === 'general' ? 'General/Strategy/Motivation' : 'Subjective/Deep Teaching'}
-**Segments required:** \${numSegs}
-**Words per segment:** STRICTLY 150-180 words
-\${specialInstructions ? \`**Special Instructions:** \${specialInstructions}\` : ''}
-    `;
+    let userPrompt = "";
+    if (inputMode === "transcript") {
+      userPrompt = `
+Generate a SKY Academy Telugu script based on this TRANSCRIPT:
+---
+${content}
+---
+Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
+Segments: ${numSegs}
+${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
+      `;
+    } else if (inputMode === "pdf") {
+      userPrompt = `
+Generate a SKY Academy Telugu script based on this BOOK/PDF TEXT:
+---
+${content}
+---
+Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
+Segments: ${numSegs}
+${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
+      `;
+    } else {
+      userPrompt = `
+Generate a SKY Academy Telugu script on:
+Topic: ${topic}
+Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
+Segments: ${numSegs}
+${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
+      `;
+    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -91,16 +131,15 @@ Generate a complete SKY Academy Telugu video script on:
     });
 
     const aiData = await response.json();
-    const content = aiData.choices[0].message.content;
+    const result_content = aiData.choices[0].message.content;
     
     // Attempt to parse JSON
     let segments = [];
     try {
-      // Clean possible markdown fences
-      const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
+      const cleaned = result_content.replace(/```json/g, "").replace(/```/g, "").trim();
       segments = JSON.parse(cleaned);
     } catch (e) {
-      console.error("Failed to parse AI response as JSON", content);
+      console.error("Failed to parse AI response as JSON", result_content);
       throw new Error("Failed to parse script. Please try again.");
     }
 

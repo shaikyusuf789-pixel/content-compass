@@ -20,6 +20,7 @@ function ScriptGenerator() {
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
   const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">("topic");
   const [topic, setTopic] = useState("");
+  const [content, setContent] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [wordCount, setWordCount] = useState(660);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,12 +31,17 @@ function ScriptGenerator() {
       toast.error("Please enter a topic");
       return;
     }
+    if (!content && (inputMode === "transcript" || inputMode === "pdf")) {
+      toast.error(`Please enter the ${inputMode} content`);
+      return;
+    }
 
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-script", {
         body: {
           topic,
+          content,
           videoType,
           inputMode,
           wordCount,
@@ -109,19 +115,18 @@ function ScriptGenerator() {
                       <div className="text-[10px] text-muted-foreground uppercase">Generate from scratch</div>
                     </Label>
                   </div>
-                  {/* Note: Transcript and PDF placeholders for now as they need file upload logic */}
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 opacity-50 cursor-not-allowed">
-                    <RadioGroupItem value="transcript" id="mode-transcript" disabled />
-                    <Label htmlFor="mode-transcript" className="flex-1">
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                    <RadioGroupItem value="transcript" id="mode-transcript" />
+                    <Label htmlFor="mode-transcript" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Competitor Transcripts</div>
-                      <div className="text-[10px] text-muted-foreground uppercase">Coming soon</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Reference from transcript</div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 opacity-50 cursor-not-allowed">
-                    <RadioGroupItem value="pdf" id="mode-pdf" disabled />
-                    <Label htmlFor="mode-pdf" className="flex-1">
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                    <RadioGroupItem value="pdf" id="mode-pdf" />
+                    <Label htmlFor="mode-pdf" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Book / PDF Section</div>
-                      <div className="text-[10px] text-muted-foreground uppercase">Coming soon</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Reference from text</div>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -136,6 +141,19 @@ function ScriptGenerator() {
                     className="min-h-[100px]"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {inputMode !== "topic" && (
+                <div className="space-y-2">
+                  <Label htmlFor="content">{inputMode === "transcript" ? "Competitor Transcript" : "Book / PDF Text"} *</Label>
+                  <Textarea
+                    id="content"
+                    placeholder={inputMode === "transcript" ? "Paste the transcript here..." : "Paste the text from book/PDF here..."}
+                    className="min-h-[150px]"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
                   />
                 </div>
               )}

@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useRouterState, Link } from "@tanstack/react-router";
-import { LayoutDashboard, ListVideo, Radio, Star } from "lucide-react";
+import { LayoutDashboard, ListVideo, Radio, Star, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_dashboard")({
@@ -15,6 +15,7 @@ function DashboardLayout() {
     { to: "/content-preview", label: "Content Preview", icon: ListVideo },
     { to: "/idea-cards", label: "Idea Cards", icon: Star },
     { to: "/script-generator", label: "Script Generator", icon: ListVideo },
+    { to: "/uploads", label: "Uploads", icon: Upload },
   ];
 
   return (

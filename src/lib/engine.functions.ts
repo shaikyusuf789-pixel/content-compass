@@ -233,7 +233,7 @@ export const getIdeas = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     let query = supabaseAdmin
       .from("raw_content")
-      .select("*")
+      .select("*, sources_master(channel_name)")
       .order("date_extracted", { ascending: false });
 
     if (data.status) {

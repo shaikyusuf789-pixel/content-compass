@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { addSource, deleteSource } from "@/lib/engine.functions";
+import { addSource, deleteSource, bulkAddSources } from "@/lib/engine.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/sources")({
@@ -21,6 +21,8 @@ function SourcesPage() {
   const qc = useQueryClient();
   const [channelName, setChannelName] = useState("");
   const [url, setUrl] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sources = useQuery({
     queryKey: ["sources"],
@@ -36,6 +38,7 @@ function SourcesPage() {
 
   const addFn = useServerFn(addSource);
   const delFn = useServerFn(deleteSource);
+  const bulkAddFn = useServerFn(bulkAddSources);
 
   const add = useMutation({
     mutationFn: () => addFn({ data: { type: "youtube", channel_name: channelName, source_url: url } }),
@@ -56,6 +59,70 @@ function SourcesPage() {
     },
   });
 
+  const bulkAdd = useMutation({
+    mutationFn: (data: any[]) => bulkAddFn({ data }),
+    onSuccess: (res) => {
+      toast.success(`Successfully imported ${res.count} sources`);
+      setIsImporting(false);
+      qc.invalidateQueries({ queryKey: ["sources"] });
+    },
+    onError: (e: any) => {
+      toast.error(e.message);
+      setIsImporting(false);
+    },
+  });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n");
+      const data: any[] = [];
+
+      // Skip header if present (assuming name,url or channel_name,source_url)
+      const startIdx = lines[0].toLowerCase().includes("url") ? 1 : 0;
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Try comma or semicolon
+        const parts = line.includes(",") ? line.split(",") : line.split(";");
+        if (parts.length >= 2) {
+          const name = parts[0].trim().replace(/^["']|["']$/g, "");
+          const sourceUrl = parts[1].trim().replace(/^["']|["']$/g, "");
+          
+          if (name && sourceUrl && sourceUrl.startsWith("http")) {
+            data.push({
+              channel_name: name,
+              source_url: sourceUrl,
+              type: "youtube",
+            });
+          }
+        }
+      }
+
+      if (data.length === 0) {
+        toast.error("No valid data found in CSV. Use format: Channel Name, URL");
+        setIsImporting(false);
+      } else {
+        bulkAdd.mutate(data);
+      }
+      
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.onerror = () => {
+      toast.error("Error reading file");
+      setIsImporting(false);
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <div>
@@ -63,32 +130,64 @@ function SourcesPage() {
         <p className="text-sm text-muted-foreground">YouTube channels we scrape to generate ideas.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Add a channel</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="grid gap-3 sm:grid-cols-[1fr_2fr_auto]"
-            onSubmit={(e) => {
-              e.preventDefault();
-              add.mutate();
-            }}
-          >
-            <div className="space-y-1">
-              <Label htmlFor="name">Channel name</Label>
-              <Input id="name" value={channelName} onChange={(e) => setChannelName(e.target.value)} placeholder="Gagan Pratap" required />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Add a channel</CardTitle>
+            <CardDescription>Manually add a single YouTube channel.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                add.mutate();
+              }}
+            >
+              <div className="space-y-1">
+                <Label htmlFor="name">Channel name</Label>
+                <Input id="name" value={channelName} onChange={(e) => setChannelName(e.target.value)} placeholder="Gagan Pratap" required />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="url">Channel URL</Label>
+                <Input id="url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/@MathsByGaganPratap" required />
+              </div>
+              <Button type="submit" disabled={add.isPending} className="w-full">Add Source</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bulk Import</CardTitle>
+            <CardDescription>Upload a CSV file with channel names and links.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center space-y-4 py-8 border-2 border-dashed rounded-lg bg-muted/30">
+            <div className="rounded-full bg-primary/10 p-3">
+              <FileText className="h-6 w-6 text-primary" />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="url">Channel URL</Label>
-              <Input id="url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/@MathsByGaganPratap" required />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium">CSV Format: Name, URL</p>
+              <p className="text-xs text-muted-foreground">Example: Gagan Pratap, https://youtube.com/@...</p>
             </div>
-            <div className="flex items-end">
-              <Button type="submit" disabled={add.isPending}>Add</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {isImporting ? "Importing..." : "Choose CSV File"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>

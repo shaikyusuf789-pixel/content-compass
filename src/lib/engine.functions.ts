@@ -61,6 +61,7 @@ JSON schema:
 
 export const runIdeaEngine = createServerFn({ method: "POST" })
   .handler(async () => {
+    console.log("Starting Idea Engine run...");
     const token = process.env.APIFY_API_TOKEN;
     if (!token) throw new Error("APIFY_API_TOKEN not configured");
 

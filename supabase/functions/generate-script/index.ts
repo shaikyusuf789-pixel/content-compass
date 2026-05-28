@@ -11,11 +11,38 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, content, videoType, inputMode, wordCount, specialInstructions } = await req.json();
+    const { 
+      topic, 
+      content, 
+      videoType, 
+      inputMode, 
+      wordCount, 
+      specialInstructions,
+      provider = "openai",
+      model = "gpt-4o"
+    } = await req.json();
 
-    const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openAiApiKey) {
-      throw new Error("OPENAI_API_KEY is not set");
+    let apiKey = "";
+    let apiUrl = "";
+
+    if (provider === "poe") {
+      apiKey = Deno.env.get("POE_API_KEY") || "";
+      if (!apiKey) throw new Error("POE_API_KEY is not set in secrets");
+      // Note: This is a placeholder for Poe API integration
+      // Replace with actual Poe API logic if available
+      apiUrl = "https://api.poe.com/v1/chat/completions"; 
+    } else if (provider === "anthropic") {
+      apiKey = Deno.env.get("ANTHROPIC_API_KEY") || "";
+      if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set in secrets");
+      apiUrl = "https://api.anthropic.com/v1/messages";
+    } else if (provider === "google") {
+      apiKey = Deno.env.get("GOOGLE_GENERATIVE_AI_API_KEY") || "";
+      if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set in secrets");
+      apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    } else {
+      apiKey = Deno.env.get("OPENAI_API_KEY") || "";
+      if (!apiKey) throw new Error("OPENAI_API_KEY is not set in secrets");
+      apiUrl = "https://api.openai.com/v1/chat/completions";
     }
 
     const numSegs = Math.ceil(wordCount / 165);
@@ -85,55 +112,64 @@ Return ONLY a valid JSON array. No preamble, no markdown fences, no explanation 
 
     let userPrompt = "";
     if (inputMode === "transcript") {
-      userPrompt = `
-Generate a SKY Academy Telugu script based on this TRANSCRIPT:
----
-${content}
----
-Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
-Segments: ${numSegs}
-${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
-      `;
+      userPrompt = `Generate a SKY Academy Telugu script based on this TRANSCRIPT:\n---\n${content}\n---\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
     } else if (inputMode === "pdf") {
-      userPrompt = `
-Generate a SKY Academy Telugu script based on this BOOK/PDF TEXT:
----
-${content}
----
-Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
-Segments: ${numSegs}
-${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
-      `;
+      userPrompt = `Generate a SKY Academy Telugu script based on this BOOK/PDF TEXT:\n---\n${content}\n---\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
     } else {
-      userPrompt = `
-Generate a SKY Academy Telugu script on:
-Topic: ${topic}
-Video Type: ${videoType === 'general' ? 'General/Strategy' : 'Subjective/Teaching'}
-Segments: ${numSegs}
-${specialInstructions ? `Special Instructions: ${specialInstructions}` : ''}
-      `;
+      userPrompt = `Generate a SKY Academy Telugu script on:\nTopic: ${topic}\nVideo Type: ${videoType}\nSegments: ${numSegs}`;
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openAiApiKey}`,
+    if (specialInstructions) {
+      userPrompt += `\nSpecial Instructions: ${specialInstructions}`;
+    }
+
+    // Default to OpenAI-compatible structure for most providers
+    let body = JSON.stringify({
+      model: model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+    });
+
+    let headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    };
+
+    // Adjust body/headers for specific providers if needed
+    if (provider === "anthropic") {
+      headers = {
         "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-      }),
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01"
+      };
+      body = JSON.stringify({
+        model: model,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      });
+    }
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: headers,
+      body: body,
     });
 
     const aiData = await response.json();
-    const result_content = aiData.choices[0].message.content;
+    let result_content = "";
+
+    if (provider === "anthropic") {
+      result_content = aiData.content[0].text;
+    } else if (provider === "google") {
+      result_content = aiData.candidates[0].content.parts[0].text;
+    } else {
+      result_content = aiData.choices[0].message.content;
+    }
     
-    // Attempt to parse JSON
     let segments = [];
     try {
       const cleaned = result_content.replace(/```json/g, "").replace(/```/g, "").trim();

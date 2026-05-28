@@ -26,6 +26,8 @@ function ScriptGenerator() {
   const [wordCount, setWordCount] = useState(660);
   const [isGenerating, setIsGenerating] = useState(false);
   const [segments, setSegments] = useState<any[]>([]);
+  const [provider, setProvider] = useState("poe");
+  const [model, setModel] = useState("claude-3-5-sonnet");
 
   const handleGenerate = async () => {
     if (!topic && inputMode === "topic") {
@@ -47,6 +49,8 @@ function ScriptGenerator() {
           inputMode,
           wordCount,
           specialInstructions,
+          provider,
+          model,
         },
       });
 
@@ -83,19 +87,28 @@ function ScriptGenerator() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Provider</Label>
-                    <select className="w-full border rounded-md p-2 text-sm">
-                      <option>Poe.com (Multi-Model)</option>
-                      <option>Claude (via PageGrid)</option>
-                      <option>OpenAI (GPT)</option>
-                      <option>Google (Gemini)</option>
+                    <select 
+                      className="w-full border rounded-md p-2 text-sm"
+                      value={provider}
+                      onChange={(e) => setProvider(e.target.value)}
+                    >
+                      <option value="poe">Poe.com (Multi-Model)</option>
+                      <option value="anthropic">Claude (Anthropic)</option>
+                      <option value="openai">OpenAI (GPT)</option>
+                      <option value="google">Google (Gemini)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <Label>Model</Label>
-                    <select className="w-full border rounded-md p-2 text-sm">
-                      <option>Claude-Opus-4.7</option>
-                      <option>Claude-Sonnet-4.6</option>
-                      <option>GPT-4o</option>
+                    <select 
+                      className="w-full border rounded-md p-2 text-sm"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                    >
+                      <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                      <option value="claude-3-opus">Claude 3 Opus</option>
+                      <option value="gpt-4o">GPT-4o</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                     </select>
                   </div>
                 </div>

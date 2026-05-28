@@ -202,21 +202,30 @@ function ScriptGenerator() {
                   onValueChange={(v: any) => setInputMode(v)}
                   className="space-y-2"
                 >
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div 
+                    className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setInputMode("topic")}
+                  >
                     <RadioGroupItem value="topic" id="mode-topic" />
                     <Label htmlFor="mode-topic" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Topic Name</div>
                       <div className="text-[10px] text-muted-foreground uppercase">Generate from scratch</div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div 
+                    className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setInputMode("transcript")}
+                  >
                     <RadioGroupItem value="transcript" id="mode-transcript" />
                     <Label htmlFor="mode-transcript" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Competitor Transcripts</div>
                       <div className="text-[10px] text-muted-foreground uppercase">Reference from transcript</div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div 
+                    className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setInputMode("pdf")}
+                  >
                     <RadioGroupItem value="pdf" id="mode-pdf" />
                     <Label htmlFor="mode-pdf" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Book / PDF Section</div>

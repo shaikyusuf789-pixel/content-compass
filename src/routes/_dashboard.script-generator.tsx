@@ -15,7 +15,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getIdeas, saveScript } from "@/lib/engine.functions";
 import { cn } from "@/lib/utils";
-import * as pdfjsLib from "pdfjs-dist";
+// pdfjsLib will be imported dynamically to avoid SSR issues
+let pdfjsLib: any = null;
 import { supabase } from "@/integrations/supabase/client";
 
 const scriptSearchSchema = z.object({
@@ -68,7 +69,18 @@ function ScriptGenerator() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      const loadPdfJs = async () => {
+        try {
+          // @ts-ignore - dynamic import for pdfjs-dist
+          const mod = await import("pdfjs-dist");
+          pdfjsLib = mod;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          console.log("PDF.js loaded successfully");
+        } catch (error) {
+          console.error("Failed to load PDF.js:", error);
+        }
+      };
+      loadPdfJs();
     }
   }, []);
 
@@ -88,6 +100,21 @@ function ScriptGenerator() {
       
       if (fileType === 'pdf') {
         const arrayBuffer = await file.arrayBuffer();
+        
+        // Ensure pdfjsLib is loaded
+        if (!pdfjsLib && typeof window !== 'undefined') {
+          try {
+            const mod = await import("pdfjs-dist");
+            pdfjsLib = mod;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          } catch (e) {
+            console.error("Delayed PDF.js load failed:", e);
+            throw new Error("Could not initialize PDF reader. Please try refreshing.");
+          }
+        }
+
+        if (!pdfjsLib) throw new Error("PDF library not ready");
+
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
         let fullText = "";
@@ -154,7 +181,7 @@ function ScriptGenerator() {
     if (segments.length === 0) return;
     setIsSaving(true);
     try {
-      const fullScript = segments.map(s => s.voiceover).join("\n\n");
+      const fullScript = segments.map(s => s.telugu_text || s.voiceover).join("\n\n");
       await saveScriptFn({ 
         data: {
           idea_id: selectedIdeaId || undefined,
@@ -212,6 +239,14 @@ function ScriptGenerator() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept=".pdf,.md,.json,.txt"
+        className="hidden"
+        id="pdf-upload-hidden"
+      />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Script Generator</h1>
@@ -369,15 +404,8 @@ function ScriptGenerator() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pdf-upload" className="cursor-pointer">UPLOAD * (PDF, MD, JSON)</Label>
-                    <input
-                      id="pdf-upload"
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".pdf,.md,.json,.txt"
-                      className="hidden"
-                    />
+                    <Label htmlFor="pdf-upload-hidden" className="cursor-pointer">UPLOAD SOURCE FILE (PDF, MD, JSON)</Label>
+                    {/* Hidden input removed from here and moved to component root */}
                     <div className="border-2 border-dashed rounded-lg p-6 bg-slate-50 flex flex-col items-center justify-center space-y-3">
                       {fileName ? (
                         <div className="flex flex-col w-full space-y-3">
@@ -418,8 +446,13 @@ function ScriptGenerator() {
                             className="bg-blue-600 hover:bg-blue-700"
                             onClick={(e) => {
                               e.preventDefault();
-                              console.log("Upload button clicked, triggering file input");
-                              fileInputRef.current?.click();
+                              console.log("Upload button clicked, triggering file input:", fileInputRef.current);
+                              if (fileInputRef.current) {
+                                fileInputRef.current.click();
+                              } else {
+                                // Fallback using DOM ID
+                                document.getElementById('pdf-upload-hidden')?.click();
+                              }
                             }}
                             disabled={isUploading}
                           >

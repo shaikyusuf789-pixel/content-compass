@@ -293,7 +293,15 @@ function ScriptGenerator() {
                             className="h-8 w-8 text-destructive"
                             onClick={removeFile}
                           >
-                            <X className="h-4 w-4" />
+                  {content && inputMode === "pdf" && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] text-muted-foreground uppercase">Content Preview (First 500 chars)</Label>
+                      <div className="p-3 bg-slate-50 border rounded-md text-[11px] font-mono whitespace-pre-wrap max-h-[100px] overflow-y-auto">
+                        {content.substring(0, 500)}
+                        {content.length > 500 ? "..." : ""}
+                      </div>
+                    </div>
+                  )}
                           </Button>
                         </div>
                       ) : (

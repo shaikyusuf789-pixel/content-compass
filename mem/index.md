@@ -11,3 +11,5 @@ Domain entities (future): competitor channels, fetched videos, summaries, approv
 Build iteratively — only implement what the user explicitly asks each turn. Do NOT invent extra pages, modules, flows, or features.
 
 ## Memories
+- **Tab 1: Source Master**: Type (telegram/youtube/web), channelName, sourceChannelUrl.
+- **Tab 2: Raw_content**: Content ID, Date Extracted, videoUrl, Original Summary, views, publishedDate, duration, thumbnailUrl, Original Title, Proposed Title, New_Thumbnail outline, Target Audience, Core 3 Hooks, 7 lines summary points, New video Outline, Status.

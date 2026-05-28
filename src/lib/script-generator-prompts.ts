@@ -46,7 +46,7 @@ After each concept: mention PYQ angle naturally.
 Last segment: SKY Academy app CTA + Telegram study notes CTA.
 `;
 
-export const SYSTEM_TOPIC = \`
+export const SYSTEM_TOPIC = `
 You are an expert Telugu video script writer for SKY Academy.
 Write a COMPLETE, ORIGINAL SKY Academy voiceover script on the given topic.
 CRITICAL RULE 1: telugu_text must contain ZERO emoji characters.
@@ -54,4 +54,5 @@ CRITICAL RULE 2: ALL numbers in telugu_text must be written as English words.
 CRITICAL RULE 3: ALL Telugu words must be in Telugu Unicode script. NEVER Roman transliteration.
 CRITICAL RULE 4: Each segment MUST be 150-180 words.
 CRITICAL RULE 5: Output must be a complete, valid JSON array.
-\` + OUTPUT_FORMAT;
+` + OUTPUT_FORMAT;
+

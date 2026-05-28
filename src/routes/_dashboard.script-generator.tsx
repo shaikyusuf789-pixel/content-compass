@@ -129,8 +129,8 @@ function ScriptGenerator() {
     
     // Combine outline and summary points for the Topic/Outline box
     const outline = idea.video_outline;
-    const summary = (idea.summary_points || []).map(p => `• ${p}`).join("\n");
-    const hooks = (idea.core_hooks || []).map(h => `Hook: ${h}`).join("\n");
+    const summary = (idea.summary_points || []).map((p: string) => `• ${p}`).join("\n");
+    const hooks = (idea.core_hooks || []).map((h: string) => `Hook: ${h}`).join("\n");
     
     const combinedContent = `TITLE: ${idea.proposed_title}\n\nOUTLINE:\n${outline?.hook || ""}\n${outline?.intro || ""}\n${outline?.body || ""}\n\nSUMMARY POINTS:\n${summary}\n\nCORE HOOKS:\n${hooks}`;
     

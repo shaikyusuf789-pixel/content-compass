@@ -133,6 +133,7 @@ function RawContentPage() {
         search: {
           transcript: idea.original_summary || "",
           topic: idea.proposed_title || idea.original_title || "",
+          ideaId: idea.id,
         },
       });
       return;

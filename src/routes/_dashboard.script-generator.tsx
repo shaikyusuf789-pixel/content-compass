@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 const scriptSearchSchema = z.object({
   transcript: z.string().optional(),
   topic: z.string().optional(),
+  ideaId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_dashboard/script-generator")({
@@ -50,7 +51,7 @@ function ScriptGenerator() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedIdeaId, setSelectedIdeaId] = useState<string>("");
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string>(search.ideaId || "");
 
   const { data: approvedIdeasData } = useQuery({
     queryKey: ["approved-ideas"],

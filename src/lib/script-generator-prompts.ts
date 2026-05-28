@@ -37,6 +37,13 @@ export const DNA_GENERAL = `
 VIDEO TYPE: GENERAL -- STRATEGY / GUIDANCE / MOTIVATION
 High motivation energy. Think passionate senior talking to juniors.
 Max three or four strategy memory hints. Community building. Telegram CTA.
+
+DNA RULES FOR GENERAL:
+1. Hook (Seg 1): Start with a relatable problem or burning ambition.
+2. The 'Why': Explain why this strategy matters for Group 1/2 exams.
+3. Memory Techniques: Use analogies like "War Strategy" or "Life Balance".
+4. Community: Emphasize that SKY Academy students are a family.
+5. CTA: Must mention the Telegram group for daily motivation.
 `;
 
 export const DNA_SUBJECTIVE = `
@@ -44,6 +51,13 @@ VIDEO TYPE: SUBJECTIVE -- DEEP SUBJECT TEACHING
 MINIMUM ONE memory hint per major concept.
 After each concept: mention PYQ angle naturally.
 Last segment: SKY Academy app CTA + Telegram study notes CTA.
+
+DNA RULES FOR SUBJECTIVE:
+1. Logic First: Explain the concept simply before adding complexity.
+2. The "Link": Connect current topic to previous topics (holistic view).
+3. PYQ Alert: Explicitly mention if this concept was asked in 2022 or 2023 exams.
+4. Memory Key: Use mnemonics or funny stories to lock the concept.
+5. Final Seg: Summarize and direct to the App for full test series.
 `;
 
 export const SYSTEM_TOPIC = `

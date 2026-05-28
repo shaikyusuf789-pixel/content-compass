@@ -20,9 +20,30 @@ serve(async (req) => {
 
     const numSegs = Math.ceil(wordCount / 165);
     
+    const dnaGeneral = `
+DNA RULES FOR GENERAL:
+1. Hook (Seg 1): Start with a relatable problem or burning ambition.
+2. The 'Why': Explain why this strategy matters for Group 1/2 exams.
+3. Memory Techniques: Use analogies like "War Strategy" or "Life Balance".
+4. Community: Emphasize that SKY Academy students are a family.
+5. CTA: Must mention the Telegram group for daily motivation.
+    `;
+
+    const dnaSubjective = `
+DNA RULES FOR SUBJECTIVE:
+1. Logic First: Explain the concept simply before adding complexity.
+2. The "Link": Connect current topic to previous topics (holistic view).
+3. PYQ Alert: Explicitly mention if this concept was asked in 2022 or 2023 exams.
+4. Memory Key: Use mnemonics or funny stories to lock the concept.
+5. Final Seg: Summarize and direct to the App for full test series.
+    `;
+
     const systemPrompt = `
 You are an expert Telugu video script writer for SKY Academy.
 Write a COMPLETE, ORIGINAL SKY Academy voiceover script on the given topic.
+
+\${videoType === 'general' ? dnaGeneral : dnaSubjective}
+
 CRITICAL RULE 1: telugu_text must contain ZERO emoji characters.
 CRITICAL RULE 2: ALL numbers in telugu_text must be written as English words.
 CRITICAL RULE 3: ALL Telugu words must be in Telugu Unicode script. NEVER Roman transliteration.
@@ -37,7 +58,7 @@ Return ONLY a valid JSON array. No preamble, no markdown fences, no explanation 
     "telugu_text": "full voiceover in TELUGU UNICODE SCRIPT -- NO EMOJIS"
   }
 ]
-- Generate exactly ${numSegs} segments
+- Generate exactly \${numSegs} segments
 - Each segment MUST be 150-180 words
 - ALL Telugu words in Telugu Unicode script
 - ALL numbers written as English words
@@ -46,11 +67,11 @@ Return ONLY a valid JSON array. No preamble, no markdown fences, no explanation 
     const userPrompt = `
 Generate a complete SKY Academy Telugu video script on:
 
-**Topic:** ${topic}
-**Video Type:** ${videoType === 'general' ? 'General/Strategy/Motivation' : 'Subjective/Deep Teaching'}
-**Segments required:** ${numSegs}
+**Topic:** \${topic}
+**Video Type:** \${videoType === 'general' ? 'General/Strategy/Motivation' : 'Subjective/Deep Teaching'}
+**Segments required:** \${numSegs}
 **Words per segment:** STRICTLY 150-180 words
-${specialInstructions ? `**Special Instructions:** ${specialInstructions}` : ''}
+\${specialInstructions ? \`**Special Instructions:** \${specialInstructions}\` : ''}
     `;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {

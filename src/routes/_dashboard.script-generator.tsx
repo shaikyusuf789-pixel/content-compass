@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw } from "lucide-react";
+import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -247,10 +247,24 @@ function ScriptGenerator() {
         className="hidden"
         id="pdf-upload-hidden"
       />
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Script Generator</h1>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest mt-1">Phase 3 • SKY Academy Script Engine</p>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <StickyNote className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded uppercase tracking-wider">Phase 1</span>
+              <span className="text-[10px] text-slate-400 font-medium tracking-wider">• SKY Academy DNA v4.1 • Powered by Poe.com</span>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Script Generation</h1>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold border border-emerald-100">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            Telugu Unicode · DNA Active
+          </div>
         </div>
       </div>
 

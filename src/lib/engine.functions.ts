@@ -173,3 +173,31 @@ export const bulkAddSources = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, count: data.length };
   });
+
+export const getIdeas = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ status: z.string().optional() }).parse(d))
+  .handler(async ({ data }) => {
+    let query = supabaseAdmin
+      .from("raw_content")
+      .select("*")
+      .order("date_extracted", { ascending: false });
+
+    if (data.status) {
+      query = query.eq("status", data.status);
+    }
+
+    const { data: ideas, error } = await query;
+    if (error) throw error;
+    return { ideas: (ideas || []) as any[] };
+  });
+
+export const updateIdeaStatus = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid(), status: z.string() }).parse(d => d))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("raw_content")
+      .update({ status: data.status })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });

@@ -38,6 +38,7 @@ function ScriptGenerator() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log("File selected:", file?.name, file?.type);
     if (!file) return;
 
     setIsUploading(true);
@@ -45,6 +46,7 @@ function ScriptGenerator() {
 
     try {
       const fileType = file.name.split('.').pop()?.toLowerCase();
+      console.log("Processing file type:", fileType);
       
       if (fileType === 'pdf') {
         const arrayBuffer = await file.arrayBuffer();
@@ -59,9 +61,11 @@ function ScriptGenerator() {
           fullText += pageText + "\n";
         }
         setContent(fullText);
+        console.log("PDF text extracted, length:", fullText.length);
       } else if (fileType === 'md' || fileType === 'json' || fileType === 'txt') {
         const text = await file.text();
         setContent(text);
+        console.log("Text file content read, length:", text.length);
       } else {
         toast.error("Unsupported file type. Please upload PDF, MD, or JSON.");
         setFileName(null);
@@ -70,10 +74,12 @@ function ScriptGenerator() {
       toast.success(`${file.name} uploaded and processed!`);
     } catch (error) {
       console.error("File upload error:", error);
-      toast.error("Failed to process file");
+      toast.error("Failed to process file. Check console for details.");
       setFileName(null);
     } finally {
       setIsUploading(false);
+      // Reset input value so the same file can be selected again
+      if (event.target) event.target.value = '';
     }
   };
 

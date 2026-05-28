@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getIdeas, updateIdeaStatus } from "@/lib/engine.functions";
+import { getIdeas, updateIdeaStatus, approveAndProcessIdea } from "@/lib/engine.functions";
 import { IdeaCardView, type ActionKey, type IdeaCard } from "@/components/IdeaCardView";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +50,7 @@ function RawContentPage() {
   const navigate = useNavigate();
   const fetchFn = useServerFn(getIdeas);
   const updateFn = useServerFn(updateIdeaStatus);
+  const approveFn = useServerFn(approveAndProcessIdea);
   const qc = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("Pending");
@@ -125,7 +126,7 @@ function RawContentPage() {
     },
   });
 
-  const handleAction = (action: ActionKey, idea: IdeaCard) => {
+  const handleAction = async (action: ActionKey, idea: IdeaCard) => {
     if (action === "generate") {
       navigate({
         to: "/script-generator",
@@ -136,6 +137,18 @@ function RawContentPage() {
       });
       return;
     }
+    
+    if (action === "approve") {
+      toast.info("Processing idea transcript and AI analysis...");
+      try {
+        await approveFn({ data: { id: idea.id } });
+        qc.invalidateQueries({ queryKey: ["ideas"] });
+      } catch (err: any) {
+        toast.error("Failed to process idea: " + err.message);
+      }
+      return;
+    }
+
     const status = ACTION_TO_STATUS[action];
     mutate.mutate({ idea, status });
   };

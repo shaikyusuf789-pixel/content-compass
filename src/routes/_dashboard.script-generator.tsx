@@ -155,6 +155,8 @@ function ScriptGenerator() {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                   />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="wordCount">Approximate Total Script Words</Label>

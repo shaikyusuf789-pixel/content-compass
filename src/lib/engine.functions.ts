@@ -124,7 +124,8 @@ ${transcript || v.description || "(no transcript available)"}`;
           const ai = await callAI(aiInput, SYSTEM_PROMPT);
           console.log("AI Response received");
 
-          await supabaseAdmin.from("raw_content").insert({
+          console.log(`Inserting raw_content for: ${v.title}`);
+          const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
             source_id: source.id,
             video_url: videoUrl,
             original_summary: transcript.slice(0, 2000),
@@ -141,6 +142,12 @@ ${transcript || v.description || "(no transcript available)"}`;
             video_outline: ai.video_outline ?? {},
             status: "Pending",
           });
+
+          if (insErr) {
+            console.error(`Insert failed for ${v.title}:`, insErr);
+            throw insErr;
+          }
+          console.log(`Successfully inserted: ${v.title}`);
           processed++;
         }
       } catch (e: any) {

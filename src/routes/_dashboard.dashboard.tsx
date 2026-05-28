@@ -2,11 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { runIdeaEngine } from "@/lib/engine.functions";
+import { runIdeaEngine, getAutoRunSettings, updateAutoRunSettings, updateLastRunTimestamp } from "@/lib/engine.functions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Play, Radio, ListVideo, CheckCircle2 } from "lucide-react";
+import { Loader2, Play, Radio, ListVideo, CheckCircle2, Clock, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_dashboard/dashboard")({
   component: Dashboard,
@@ -15,6 +17,23 @@ export const Route = createFileRoute("/_dashboard/dashboard")({
 
 function Dashboard() {
   const qc = useQueryClient();
+  
+  const autoRun = useQuery({
+    queryKey: ["auto-run-settings"],
+    queryFn: () => useServerFn(getAutoRunSettings)(),
+  });
+
+  const updateAutoRun = useMutation({
+    mutationFn: (vars: { enabled: boolean; interval_hrs: number }) => 
+      useServerFn(updateAutoRunSettings)({ data: vars }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["auto-run-settings"] });
+      toast.success("Auto-run settings updated");
+    },
+  });
+
+  const setLastRun = useServerFn(updateLastRunTimestamp);
+
   const stats = useQuery({
     queryKey: ["stats"],
     queryFn: async () => {
@@ -35,9 +54,33 @@ function Dashboard() {
       if (res.errors?.length) toast.warning(res.errors.join(" | "));
       qc.invalidateQueries({ queryKey: ["stats"] });
       qc.invalidateQueries({ queryKey: ["raw_content"] });
+      setLastRun();
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // Watchdog Timer
+  useEffect(() => {
+    if (!autoRun.data?.enabled) return;
+
+    const intervalMs = autoRun.data.interval_hrs * 60 * 60 * 1000;
+    const lastRun = autoRun.data.last_run ? new Date(autoRun.data.last_run).getTime() : 0;
+    const now = Date.now();
+    
+    const timeSinceLastRun = now - lastRun;
+    const nextRunIn = Math.max(0, intervalMs - timeSinceLastRun);
+
+    console.log(`Auto-run scheduled in ${nextRunIn / 1000 / 60} minutes`);
+
+    const timer = setTimeout(() => {
+      if (!run.isPending) {
+        console.log("Auto-running Phase 1 engine...");
+        run.mutate();
+      }
+    }, nextRunIn);
+
+    return () => clearTimeout(timer);
+  }, [autoRun.data, run.isPending]);
 
   const cards = [
     { label: "Sources", value: stats.data?.sources, icon: Radio },
@@ -47,15 +90,56 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Phase 1 — Idea Engine</h1>
           <p className="text-sm text-muted-foreground">Scrape competitor YouTube channels and generate fresh video ideas.</p>
         </div>
-        <Button onClick={() => run.mutate()} disabled={run.isPending}>
-          {run.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-          Run engine
-        </Button>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-card p-1 shadow-sm">
+            <Select 
+              value={autoRun.data?.interval_hrs?.toString() || "1"} 
+              onValueChange={(v) => updateAutoRun.mutate({ 
+                enabled: autoRun.data?.enabled ?? false, 
+                interval_hrs: parseInt(v) 
+              })}
+            >
+              <SelectTrigger className="h-8 w-[120px] border-none bg-transparent shadow-none focus:ring-0">
+                <Clock className="mr-2 h-3.5 w-3.5" />
+                <SelectValue placeholder="Interval" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Every 1 hr</SelectItem>
+                <SelectItem value="2">Every 2 hrs</SelectItem>
+                <SelectItem value="6">Every 6 hrs</SelectItem>
+                <SelectItem value="12">Every 12 hrs</SelectItem>
+                <SelectItem value="24">Every 24 hrs</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            <Button 
+              variant={autoRun.data?.enabled ? "default" : "outline"}
+              size="sm"
+              className={`h-8 gap-2 ${autoRun.data?.enabled ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+              onClick={() => updateAutoRun.mutate({ 
+                enabled: !autoRun.data?.enabled, 
+                interval_hrs: autoRun.data?.interval_hrs ?? 1 
+              })}
+              disabled={updateAutoRun.isPending}
+            >
+              <Activity className={`h-3.5 w-3.5 ${autoRun.data?.enabled ? "animate-pulse" : ""}`} />
+              {autoRun.data?.enabled ? "Auto run: ON" : "Auto run: OFF"}
+            </Button>
+          </div>
+
+          <Button onClick={() => run.mutate()} disabled={run.isPending} variant="secondary" size="sm" className="h-8">
+            {run.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+            Run manually
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

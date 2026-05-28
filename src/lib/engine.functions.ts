@@ -221,6 +221,44 @@ export const updateIdeaStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const getAutoRunSettings = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "engine_auto_run")
+      .maybeSingle();
+    if (error) throw error;
+    return (data?.value || { enabled: false, interval_hrs: 1, last_run: null }) as {
+      enabled: boolean;
+      interval_hrs: number;
+      last_run: string | null;
+    };
+  });
+
+export const updateAutoRunSettings = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ enabled: z.boolean(), interval_hrs: z.number() }))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert({ key: "engine_auto_run", value: data }, { onConflict: "key" });
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const updateLastRunTimestamp = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const { data: current } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "engine_auto_run")
+      .single();
+    
+    const newValue = { ...(current?.value as any || {}), last_run: new Date().toISOString() };
+    await supabaseAdmin.from("app_settings").update({ value: newValue }).eq("key", "engine_auto_run");
+    return { ok: true };
+  });
+
 export const approveAndProcessIdea = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ data: { id } }) => {

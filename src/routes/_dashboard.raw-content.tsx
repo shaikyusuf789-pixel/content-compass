@@ -55,7 +55,7 @@ function RawContentPage() {
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["ideas"],
-    queryFn: () => fetchFn({ status: undefined }), // Fetch all and filter locally for smoother tab switching
+    queryFn: () => fetchFn({ data: { status: undefined } }), // Fetch all and filter locally for smoother tab switching
   });
 
   const ideas = (data?.ideas || []) as IdeaCard[];
@@ -103,7 +103,7 @@ function RawContentPage() {
 
   const mutate = useMutation({
     mutationFn: (vars: { idea: IdeaCard; status: string }) =>
-      updateFn({ id: vars.idea.id, status: vars.status }),
+      updateFn({ data: { id: vars.idea.id, status: vars.status } }),
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ["ideas"] });
       const prev = qc.getQueryData(["ideas"]);

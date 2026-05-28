@@ -192,7 +192,7 @@ export const getIdeas = createServerFn({ method: "GET" })
   });
 
 export const updateIdeaStatus = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().uuid(), status: z.string() }).parse(d => d))
+  .inputValidator(z.object({ id: z.string().uuid(), status: z.string() }))
   .handler(async ({ data }) => {
     const { error } = await supabaseAdmin
       .from("raw_content")

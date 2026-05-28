@@ -11,12 +11,24 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardYoutubeRouteImport } from './routes/_dashboard.youtube'
 import { Route as DashboardUploadsRouteImport } from './routes/_dashboard.uploads'
+import { Route as DashboardStorageRouteImport } from './routes/_dashboard.storage'
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
+import { Route as DashboardSlidesRouteImport } from './routes/_dashboard.slides'
+import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
+import { Route as DashboardScriptingRouteImport } from './routes/_dashboard.scripting'
 import { Route as DashboardScriptGeneratorRouteImport } from './routes/_dashboard.script-generator'
+import { Route as DashboardPipelineRouteImport } from './routes/_dashboard.pipeline'
+import { Route as DashboardMasterVideoRouteImport } from './routes/_dashboard.master-video'
 import { Route as DashboardIdeaCardsRouteImport } from './routes/_dashboard.idea-cards'
+import { Route as DashboardHistoryRouteImport } from './routes/_dashboard.history'
+import { Route as DashboardGammaPlayerRouteImport } from './routes/_dashboard.gamma-player'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard.dashboard'
 import { Route as DashboardContentPreviewRouteImport } from './routes/_dashboard.content-preview'
+import { Route as DashboardChunksRouteImport } from './routes/_dashboard.chunks'
+import { Route as DashboardAudioRouteImport } from './routes/_dashboard.audio'
+import { Route as DashboardAnnotationsRouteImport } from './routes/_dashboard.annotations'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
@@ -27,14 +39,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardYoutubeRoute = DashboardYoutubeRouteImport.update({
+  id: '/youtube',
+  path: '/youtube',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardUploadsRoute = DashboardUploadsRouteImport.update({
   id: '/uploads',
   path: '/uploads',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardStorageRoute = DashboardStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSourcesRoute = DashboardSourcesRouteImport.update({
   id: '/sources',
   path: '/sources',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSlidesRoute = DashboardSlidesRouteImport.update({
+  id: '/slides',
+  path: '/slides',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardScriptingRoute = DashboardScriptingRouteImport.update({
+  id: '/scripting',
+  path: '/scripting',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardScriptGeneratorRoute =
@@ -43,9 +80,29 @@ const DashboardScriptGeneratorRoute =
     path: '/script-generator',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardPipelineRoute = DashboardPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMasterVideoRoute = DashboardMasterVideoRouteImport.update({
+  id: '/master-video',
+  path: '/master-video',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardIdeaCardsRoute = DashboardIdeaCardsRouteImport.update({
   id: '/idea-cards',
   path: '/idea-cards',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardGammaPlayerRoute = DashboardGammaPlayerRouteImport.update({
+  id: '/gamma-player',
+  path: '/gamma-player',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
@@ -58,65 +115,152 @@ const DashboardContentPreviewRoute = DashboardContentPreviewRouteImport.update({
   path: '/content-preview',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardChunksRoute = DashboardChunksRouteImport.update({
+  id: '/chunks',
+  path: '/chunks',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAudioRoute = DashboardAudioRouteImport.update({
+  id: '/audio',
+  path: '/audio',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAnnotationsRoute = DashboardAnnotationsRouteImport.update({
+  id: '/annotations',
+  path: '/annotations',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/annotations': typeof DashboardAnnotationsRoute
+  '/audio': typeof DashboardAudioRoute
+  '/chunks': typeof DashboardChunksRoute
   '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
+  '/gamma-player': typeof DashboardGammaPlayerRoute
+  '/history': typeof DashboardHistoryRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
+  '/master-video': typeof DashboardMasterVideoRoute
+  '/pipeline': typeof DashboardPipelineRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
+  '/scripting': typeof DashboardScriptingRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/slides': typeof DashboardSlidesRoute
   '/sources': typeof DashboardSourcesRoute
+  '/storage': typeof DashboardStorageRoute
   '/uploads': typeof DashboardUploadsRoute
+  '/youtube': typeof DashboardYoutubeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/annotations': typeof DashboardAnnotationsRoute
+  '/audio': typeof DashboardAudioRoute
+  '/chunks': typeof DashboardChunksRoute
   '/content-preview': typeof DashboardContentPreviewRoute
   '/dashboard': typeof DashboardDashboardRoute
+  '/gamma-player': typeof DashboardGammaPlayerRoute
+  '/history': typeof DashboardHistoryRoute
   '/idea-cards': typeof DashboardIdeaCardsRoute
+  '/master-video': typeof DashboardMasterVideoRoute
+  '/pipeline': typeof DashboardPipelineRoute
   '/script-generator': typeof DashboardScriptGeneratorRoute
+  '/scripting': typeof DashboardScriptingRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/slides': typeof DashboardSlidesRoute
   '/sources': typeof DashboardSourcesRoute
+  '/storage': typeof DashboardStorageRoute
   '/uploads': typeof DashboardUploadsRoute
+  '/youtube': typeof DashboardYoutubeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_dashboard': typeof DashboardRouteWithChildren
+  '/_dashboard/annotations': typeof DashboardAnnotationsRoute
+  '/_dashboard/audio': typeof DashboardAudioRoute
+  '/_dashboard/chunks': typeof DashboardChunksRoute
   '/_dashboard/content-preview': typeof DashboardContentPreviewRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
+  '/_dashboard/gamma-player': typeof DashboardGammaPlayerRoute
+  '/_dashboard/history': typeof DashboardHistoryRoute
   '/_dashboard/idea-cards': typeof DashboardIdeaCardsRoute
+  '/_dashboard/master-video': typeof DashboardMasterVideoRoute
+  '/_dashboard/pipeline': typeof DashboardPipelineRoute
   '/_dashboard/script-generator': typeof DashboardScriptGeneratorRoute
+  '/_dashboard/scripting': typeof DashboardScriptingRoute
+  '/_dashboard/settings': typeof DashboardSettingsRoute
+  '/_dashboard/slides': typeof DashboardSlidesRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
+  '/_dashboard/storage': typeof DashboardStorageRoute
   '/_dashboard/uploads': typeof DashboardUploadsRoute
+  '/_dashboard/youtube': typeof DashboardYoutubeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/annotations'
+    | '/audio'
+    | '/chunks'
     | '/content-preview'
     | '/dashboard'
+    | '/gamma-player'
+    | '/history'
     | '/idea-cards'
+    | '/master-video'
+    | '/pipeline'
     | '/script-generator'
+    | '/scripting'
+    | '/settings'
+    | '/slides'
     | '/sources'
+    | '/storage'
     | '/uploads'
+    | '/youtube'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/annotations'
+    | '/audio'
+    | '/chunks'
     | '/content-preview'
     | '/dashboard'
+    | '/gamma-player'
+    | '/history'
     | '/idea-cards'
+    | '/master-video'
+    | '/pipeline'
     | '/script-generator'
+    | '/scripting'
+    | '/settings'
+    | '/slides'
     | '/sources'
+    | '/storage'
     | '/uploads'
+    | '/youtube'
   id:
     | '__root__'
     | '/'
     | '/_dashboard'
+    | '/_dashboard/annotations'
+    | '/_dashboard/audio'
+    | '/_dashboard/chunks'
     | '/_dashboard/content-preview'
     | '/_dashboard/dashboard'
+    | '/_dashboard/gamma-player'
+    | '/_dashboard/history'
     | '/_dashboard/idea-cards'
+    | '/_dashboard/master-video'
+    | '/_dashboard/pipeline'
     | '/_dashboard/script-generator'
+    | '/_dashboard/scripting'
+    | '/_dashboard/settings'
+    | '/_dashboard/slides'
     | '/_dashboard/sources'
+    | '/_dashboard/storage'
     | '/_dashboard/uploads'
+    | '/_dashboard/youtube'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,11 +284,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/youtube': {
+      id: '/_dashboard/youtube'
+      path: '/youtube'
+      fullPath: '/youtube'
+      preLoaderRoute: typeof DashboardYoutubeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/uploads': {
       id: '/_dashboard/uploads'
       path: '/uploads'
       fullPath: '/uploads'
       preLoaderRoute: typeof DashboardUploadsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/storage': {
+      id: '/_dashboard/storage'
+      path: '/storage'
+      fullPath: '/storage'
+      preLoaderRoute: typeof DashboardStorageRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/sources': {
@@ -154,6 +312,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSourcesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/slides': {
+      id: '/_dashboard/slides'
+      path: '/slides'
+      fullPath: '/slides'
+      preLoaderRoute: typeof DashboardSlidesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/settings': {
+      id: '/_dashboard/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/scripting': {
+      id: '/_dashboard/scripting'
+      path: '/scripting'
+      fullPath: '/scripting'
+      preLoaderRoute: typeof DashboardScriptingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/script-generator': {
       id: '/_dashboard/script-generator'
       path: '/script-generator'
@@ -161,11 +340,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardScriptGeneratorRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/pipeline': {
+      id: '/_dashboard/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof DashboardPipelineRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/master-video': {
+      id: '/_dashboard/master-video'
+      path: '/master-video'
+      fullPath: '/master-video'
+      preLoaderRoute: typeof DashboardMasterVideoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/idea-cards': {
       id: '/_dashboard/idea-cards'
       path: '/idea-cards'
       fullPath: '/idea-cards'
       preLoaderRoute: typeof DashboardIdeaCardsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/history': {
+      id: '/_dashboard/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof DashboardHistoryRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/gamma-player': {
+      id: '/_dashboard/gamma-player'
+      path: '/gamma-player'
+      fullPath: '/gamma-player'
+      preLoaderRoute: typeof DashboardGammaPlayerRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/dashboard': {
@@ -182,25 +389,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContentPreviewRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/chunks': {
+      id: '/_dashboard/chunks'
+      path: '/chunks'
+      fullPath: '/chunks'
+      preLoaderRoute: typeof DashboardChunksRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/audio': {
+      id: '/_dashboard/audio'
+      path: '/audio'
+      fullPath: '/audio'
+      preLoaderRoute: typeof DashboardAudioRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/annotations': {
+      id: '/_dashboard/annotations'
+      path: '/annotations'
+      fullPath: '/annotations'
+      preLoaderRoute: typeof DashboardAnnotationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardAnnotationsRoute: typeof DashboardAnnotationsRoute
+  DashboardAudioRoute: typeof DashboardAudioRoute
+  DashboardChunksRoute: typeof DashboardChunksRoute
   DashboardContentPreviewRoute: typeof DashboardContentPreviewRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
+  DashboardGammaPlayerRoute: typeof DashboardGammaPlayerRoute
+  DashboardHistoryRoute: typeof DashboardHistoryRoute
   DashboardIdeaCardsRoute: typeof DashboardIdeaCardsRoute
+  DashboardMasterVideoRoute: typeof DashboardMasterVideoRoute
+  DashboardPipelineRoute: typeof DashboardPipelineRoute
   DashboardScriptGeneratorRoute: typeof DashboardScriptGeneratorRoute
+  DashboardScriptingRoute: typeof DashboardScriptingRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardSlidesRoute: typeof DashboardSlidesRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
+  DashboardStorageRoute: typeof DashboardStorageRoute
   DashboardUploadsRoute: typeof DashboardUploadsRoute
+  DashboardYoutubeRoute: typeof DashboardYoutubeRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnnotationsRoute: DashboardAnnotationsRoute,
+  DashboardAudioRoute: DashboardAudioRoute,
+  DashboardChunksRoute: DashboardChunksRoute,
   DashboardContentPreviewRoute: DashboardContentPreviewRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
+  DashboardGammaPlayerRoute: DashboardGammaPlayerRoute,
+  DashboardHistoryRoute: DashboardHistoryRoute,
   DashboardIdeaCardsRoute: DashboardIdeaCardsRoute,
+  DashboardMasterVideoRoute: DashboardMasterVideoRoute,
+  DashboardPipelineRoute: DashboardPipelineRoute,
   DashboardScriptGeneratorRoute: DashboardScriptGeneratorRoute,
+  DashboardScriptingRoute: DashboardScriptingRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardSlidesRoute: DashboardSlidesRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
+  DashboardStorageRoute: DashboardStorageRoute,
   DashboardUploadsRoute: DashboardUploadsRoute,
+  DashboardYoutubeRoute: DashboardYoutubeRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -214,3 +466,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

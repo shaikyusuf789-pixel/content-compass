@@ -9,14 +9,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Wand2, FileText, CheckCircle2, X } from "lucide-react";
+import { Loader2, Plus, Wand2, FileText, CheckCircle2, X, Save, Edit3, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getIdeas, saveScript } from "@/lib/engine.functions";
+import { cn } from "@/lib/utils";
 import * as pdfjsLib from "pdfjs-dist";
 import { supabase } from "@/integrations/supabase/client";
 
 const scriptSearchSchema = z.object({
   transcript: z.string().optional(),
   topic: z.string().optional(),
+  ideaId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_dashboard/script-generator")({
@@ -26,9 +31,12 @@ export const Route = createFileRoute("/_dashboard/script-generator")({
 
 function ScriptGenerator() {
   const search = useSearch({ from: "/_dashboard/script-generator" });
+  const getIdeasFn = useServerFn(getIdeas);
+  const saveScriptFn = useServerFn(saveScript);
+
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
-  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">(
-    search.transcript ? "transcript" : "topic"
+  const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf" | "idea">(
+    search.ideaId ? "idea" : search.transcript ? "transcript" : "topic"
   );
   const [topic, setTopic] = useState(search.topic || "");
   const [chapterContext, setChapterContext] = useState("");
@@ -41,6 +49,22 @@ function ScriptGenerator() {
   const [model, setModel] = useState("claude-3-5-sonnet");
   const [fileName, setFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string>(search.ideaId || "");
+
+  const { data: approvedIdeasData } = useQuery({
+    queryKey: ["approved-ideas"],
+    queryFn: () => getIdeasFn({ data: { status: "Approved" } }),
+  });
+
+  const approvedIdeas = approvedIdeasData?.ideas || [];
+
+  useEffect(() => {
+    if (search.ideaId && approvedIdeas.length > 0) {
+      handleIdeaSelect(search.ideaId);
+    }
+  }, [search.ideaId, approvedIdeas.length]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -101,6 +125,51 @@ function ScriptGenerator() {
     setContent("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleIdeaSelect = (ideaId: string) => {
+    const idea = approvedIdeas.find(i => i.id === ideaId);
+    if (!idea) return;
+    
+    setSelectedIdeaId(ideaId);
+    setTopic(idea.proposed_title || idea.original_title || "");
+    
+    // Combine outline and summary points for the Topic/Outline box
+    const outline = idea.video_outline;
+    const summary = (idea.summary_points || []).map((p: string) => `• ${p}`).join("\n");
+    const hooks = (idea.core_hooks || []).map((h: string) => `Hook: ${h}`).join("\n");
+    
+    const combinedContent = `TITLE: ${idea.proposed_title}\n\nOUTLINE:\n${outline?.hook || ""}\n${outline?.intro || ""}\n${outline?.body || ""}\n\nSUMMARY POINTS:\n${summary}\n\nCORE HOOKS:\n${hooks}`;
+    
+    setChapterContext(combinedContent);
+    // Switch to PDF/Idea mode which uses chapterContext + content
+    // Actually, let's make it simple: pre-fill the transcript box if we have it
+    if (idea.original_summary) {
+      setContent(idea.original_summary);
+    }
+  };
+
+  const handleSaveScript = async () => {
+    if (segments.length === 0) return;
+    setIsSaving(true);
+    try {
+      const fullScript = segments.map(s => s.voiceover).join("\n\n");
+      await saveScriptFn({ 
+        data: {
+          idea_id: selectedIdeaId || undefined,
+          title: topic || "Untitled Script",
+          content: fullScript,
+          word_count: wordCount,
+          video_type: videoType,
+          model: model,
+        } 
+      });
+      toast.success("Script saved to database!");
+    } catch (err: any) {
+      toast.error("Failed to save script: " + err.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -221,6 +290,16 @@ function ScriptGenerator() {
                 >
                   <div 
                     className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setInputMode("idea")}
+                  >
+                    <RadioGroupItem value="idea" id="mode-idea" />
+                    <Label htmlFor="mode-idea" className="flex-1 cursor-pointer">
+                      <div className="font-semibold text-sm">Approved Ideas</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">From Competitor Analysis</div>
+                    </Label>
+                  </div>
+                  <div 
+                    className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => setInputMode("topic")}
                   >
                     <RadioGroupItem value="topic" id="mode-topic" />
@@ -251,6 +330,25 @@ function ScriptGenerator() {
                   </div>
                 </RadioGroup>
               </div>
+
+              {inputMode === "idea" && (
+                <div className="space-y-2">
+                  <Label htmlFor="idea-select">Select Approved Idea</Label>
+                  <select
+                    id="idea-select"
+                    className="w-full border rounded-md p-2 text-sm bg-white"
+                    value={selectedIdeaId}
+                    onChange={(e) => handleIdeaSelect(e.target.value)}
+                  >
+                    <option value="">-- Choose an idea --</option>
+                    {approvedIdeas.map((idea) => (
+                      <option key={idea.id} value={idea.id}>
+                        {idea.proposed_title || idea.original_title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {inputMode === "pdf" && (
                 <div className="space-y-4">
@@ -415,11 +513,49 @@ function ScriptGenerator() {
         <div className="space-y-6">
           <Card className="min-h-[600px] flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between border-b py-4">
-              <CardTitle className="text-lg">Script Preview</CardTitle>
+              <div className="flex items-center space-x-2">
+                <CardTitle className="text-lg">Script Preview</CardTitle>
+                {segments.length > 0 && (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                    {segments.length} Segments
+                  </Badge>
+                )}
+              </div>
               {segments.length > 0 && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
-                  {segments.length} Segments
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditing(!isEditing)}
+                    className={isEditing ? "bg-blue-50" : ""}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" />
+                    {isEditing ? "Stop Editing" : "Edit"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    <RotateCcw className={cn("w-4 h-4 mr-1", isGenerating && "animate-spin")} />
+                    Regenerate
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleSaveScript}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-1" />
+                    )}
+                    Save Script
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent className="flex-1 p-0">
@@ -447,9 +583,21 @@ function ScriptGenerator() {
                             {seg.telugu_text.split(" ").length} words
                           </Badge>
                         </div>
-                        <div className="p-4 bg-muted/30 rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap">
-                          {seg.telugu_text}
-                        </div>
+                        {isEditing ? (
+                          <Textarea
+                            className="p-4 bg-white rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap"
+                            value={seg.telugu_text}
+                            onChange={(e) => {
+                              const newSegments = [...segments];
+                              newSegments[i].telugu_text = e.target.value;
+                              setSegments(newSegments);
+                            }}
+                          />
+                        ) : (
+                          <div className="p-4 bg-muted/30 rounded-lg border leading-relaxed text-lg font-telugu min-h-[300px] whitespace-pre-wrap">
+                            {seg.telugu_text}
+                          </div>
+                        )}
                       </TabsContent>
                     ))}
                   </div>

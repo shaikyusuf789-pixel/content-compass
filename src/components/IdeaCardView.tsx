@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { Eye, Calendar, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, Calendar, Clock, ExternalLink, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ActionKey = "approve" | "reject" | "priority" | "done" | "generate";
@@ -35,8 +35,19 @@ function IdeaCardViewBase({ idea, actions, onAction, pending }: Props) {
   const hasMore = summary.length > COLLAPSED_COUNT;
   const visible = expanded ? summary : summary.slice(0, COLLAPSED_COUNT);
 
+  const isProcessing = idea.status === "Processing";
+
   return (
-    <article className="rounded-3xl gradient-card border border-border/40 shadow-card overflow-hidden flex flex-col animate-fade-in">
+    <article className={cn(
+      "rounded-3xl gradient-card border border-border/40 shadow-card overflow-hidden flex flex-col animate-fade-in relative",
+      isProcessing && "opacity-70 grayscale-[0.5]"
+    )}>
+      {isProcessing && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[1px]">
+          <Loader2 className="size-8 animate-spin text-primary mb-2" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Processing...</span>
+        </div>
+      )}
       {/* Thumbnail */}
       <div className="relative w-full aspect-video bg-muted overflow-hidden">
         {idea.thumbnail_url ? (

@@ -119,61 +119,26 @@ export const runIdeaEngine = createServerFn({ method: "POST" })
               return null;
             }
 
-            console.log(`Processing video: ${v.title} (${videoUrl})`);
+            console.log(`Processing basic info for video: ${v.title} (${videoUrl})`);
 
-            // transcript
-            let transcript = "";
-            try {
-              const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl }, token);
-              transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 30000);
-            } catch (e) {
-              console.warn(`Transcript failed for ${v.title}, falling back to description.`);
-              transcript = v.text || v.description || "";
-            }
-
-            const aiInput = `Channel: ${source.channel_name}
-Original Title: ${v.title}
-Views: ${v.viewCount ?? v.views ?? "N/A"}
-Duration: ${v.duration ?? "N/A"}
-
-Transcript / Description:
-${transcript || v.description || "(no transcript available)"}`;
-
-            console.log(`Calling AI for: ${v.title}`);
-            const ai = await callAI(aiInput, SYSTEM_PROMPT);
-            
-            // Fix for relative dates from YouTube scraper (e.g. "5 hours ago")
+            // Fix for relative dates
             let pubDate = v.date || v.publishedAt || null;
             if (pubDate && isNaN(Date.parse(pubDate))) {
-              console.log(`Non-standard date detected: ${pubDate}. Setting to null.`);
               pubDate = null; 
             }
 
-            console.log(`Inserting raw_content for: ${v.title}`);
             const { error: insErr } = await supabaseAdmin.from("raw_content").insert({
               source_id: source.id,
               video_url: videoUrl,
-              original_summary: transcript, // Save full transcript for script generation wiring
               views: typeof v.viewCount === "number" ? v.viewCount : typeof v.views === "number" ? v.views : null,
               published_date: pubDate,
               duration: v.duration?.toString() ?? null,
               thumbnail_url: v.thumbnailUrl || v.thumbnail || null,
               original_title: v.title,
-              proposed_title: ai.proposed_title,
-              new_thumbnail_outline: ai.new_thumbnail_outline,
-              target_audience: ai.target_audience,
-              core_hooks: ai.core_hooks ?? [],
-              summary_points: ai.summary_points ?? [],
-              video_outline: ai.video_outline ?? {},
               status: "Pending",
             });
 
-            if (insErr) {
-              console.error(`Insert failed for ${v.title}:`, insErr);
-              throw insErr;
-            }
-
-            console.log(`Successfully inserted: ${v.title}`);
+            if (insErr) throw insErr;
             return true;
           } catch (e: any) {
             console.error(`Failed to process video ${v.title}:`, e);
@@ -252,6 +217,88 @@ export const updateIdeaStatus = createServerFn({ method: "POST" })
       .from("raw_content")
       .update({ status: data.status })
       .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const approveAndProcessIdea = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data: { id } }) => {
+    console.log(`Approving and processing idea: ${id}`);
+    const token = process.env.APIFY_API_TOKEN;
+    if (!token) throw new Error("APIFY_API_TOKEN not configured");
+
+    // 1. Set status to Processing
+    await supabaseAdmin.from("raw_content").update({ status: "Processing" }).eq("id", id);
+
+    try {
+      // 2. Fetch the idea details
+      const { data: idea, error: fetchErr } = await supabaseAdmin
+        .from("raw_content")
+        .select("*, sources_master(channel_name)")
+        .eq("id", id)
+        .single();
+      if (fetchErr || !idea) throw new Error("Idea not found");
+
+      // 3. Fetch Transcript
+      console.log(`Fetching transcript for: ${idea.original_title}`);
+      let transcript = "";
+      try {
+        const tr = await apifyRun(TRANSCRIPT_ACTOR, { videoUrl: idea.video_url }, token);
+        transcript = (tr?.[0]?.transcript || tr?.[0]?.data || tr?.map((x: any) => x.text).join(" ") || "").toString().slice(0, 30000);
+      } catch (e) {
+        console.warn(`Transcript failed for ${idea.original_title}`);
+        // Fallback to description if available, but we don't have it saved in basic info yet
+        // If we want it, we should save it during initial scrape.
+      }
+
+      // 4. Call AI for new content
+      const aiInput = `Channel: ${idea.sources_master?.channel_name || "Unknown"}
+Original Title: ${idea.original_title}
+Views: ${idea.views ?? "N/A"}
+
+Transcript / Description:
+${transcript || "(no transcript available)"}`;
+
+      console.log(`Calling AI for detailed analysis: ${idea.original_title}`);
+      const ai = await callAI(aiInput, SYSTEM_PROMPT);
+
+      // 5. Update DB
+      const { error: updErr } = await supabaseAdmin
+        .from("raw_content")
+        .update({
+          status: "Approved",
+          original_summary: transcript,
+          proposed_title: ai.proposed_title,
+          new_thumbnail_outline: ai.new_thumbnail_outline,
+          target_audience: ai.target_audience,
+          core_hooks: ai.core_hooks ?? [],
+          summary_points: ai.summary_points ?? [],
+          video_outline: ai.video_outline ?? {},
+        })
+        .eq("id", id);
+
+      if (updErr) throw updErr;
+
+      return { ok: true };
+    } catch (e: any) {
+      console.error(`Failed to process approved idea ${id}:`, e);
+      await supabaseAdmin.from("raw_content").update({ status: "Pending" }).eq("id", id);
+      throw e;
+    }
+  });
+
+export const saveScript = createServerFn({ method: "POST" })
+  .inputValidator(z.object({
+    idea_id: z.string().uuid().optional(),
+    title: z.string(),
+    content: z.string(),
+    word_count: z.number().optional(),
+    video_type: z.string().optional(),
+    model: z.string().optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin.from("scripts").insert(data);
     if (error) throw error;
     return { ok: true };
   });

@@ -20,6 +20,7 @@ function ScriptGenerator() {
   const [videoType, setVideoType] = useState<"subjective" | "general">("subjective");
   const [inputMode, setInputMode] = useState<"topic" | "transcript" | "pdf">("topic");
   const [topic, setTopic] = useState("");
+  const [chapterContext, setChapterContext] = useState("");
   const [content, setContent] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [wordCount, setWordCount] = useState(660);
@@ -149,11 +150,44 @@ function ScriptGenerator() {
                     <RadioGroupItem value="pdf" id="mode-pdf" />
                     <Label htmlFor="mode-pdf" className="flex-1 cursor-pointer">
                       <div className="font-semibold text-sm">Book / PDF Section</div>
-                      <div className="text-[10px] text-muted-foreground uppercase">Reference from text</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">Convert to SKY Style</div>
                     </Label>
                   </div>
                 </RadioGroup>
               </div>
+
+              {inputMode === "pdf" && (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                    <p className="text-green-800 text-sm font-medium">
+                      PDF Mode -- Upload a book chapter or study notes PDF. SKY Engine transforms it into Telugu lipi voiceover.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="chapterContext">Topic / Chapter context (optional)</Label>
+                    <Input
+                      id="chapterContext"
+                      placeholder="e.g. Chapter 3: Directive Principles..."
+                      value={chapterContext}
+                      onChange={(e) => setChapterContext(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Upload PDF *</Label>
+                    <div className="border-2 border-dashed rounded-lg p-6 bg-slate-50 flex flex-col items-center justify-center space-y-3">
+                      <div className="flex items-center space-x-4">
+                        <Button variant="outline" className="bg-white">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Upload
+                        </Button>
+                        <span className="text-xs text-muted-foreground">200MB per file • PDF</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {inputMode === "topic" && (
                 <div className="space-y-2">
@@ -168,12 +202,12 @@ function ScriptGenerator() {
                 </div>
               )}
 
-              {inputMode !== "topic" && (
+              {inputMode === "transcript" && (
                 <div className="space-y-2">
-                  <Label htmlFor="content">{inputMode === "transcript" ? "Competitor Transcript" : "Book / PDF Text"} *</Label>
+                  <Label htmlFor="content">Competitor Transcript *</Label>
                   <Textarea
                     id="content"
-                    placeholder={inputMode === "transcript" ? "Paste the transcript here..." : "Paste the text from book/PDF here..."}
+                    placeholder="Paste the transcript here..."
                     className="min-h-[150px]"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}

@@ -136,12 +136,49 @@ function UploadsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const copyReference = (file: any) => {
+    const ref = `[File: ${file.file_name} (ID: ${file.id})]`;
+    navigator.clipboard.writeText(ref);
+    toast.success("Reference copied to clipboard");
+  };
+
+  const renderPreview = (file: any) => {
+    const isImage = file.file_type?.startsWith("image/");
+    const isVideo = file.file_type?.startsWith("video/");
+    const publicUrl = supabase.storage.from("uploads").getPublicUrl(file.file_path).data.publicUrl;
+
+    if (isImage) {
+      return (
+        <div className="aspect-video w-full overflow-hidden rounded-md mb-4 bg-muted flex items-center justify-center">
+          <img src={publicUrl} alt={file.file_name} className="object-contain max-h-full" />
+        </div>
+      );
+    }
+
+    if (isVideo) {
+      return (
+        <div className="aspect-video w-full overflow-hidden rounded-md mb-4 bg-muted flex items-center justify-center">
+          <video src={publicUrl} className="max-h-full" preload="metadata" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Loader2 className="h-6 w-6 text-white/50 animate-pulse" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-md mb-4 bg-muted flex items-center justify-center">
+        <File className="h-12 w-12 text-muted-foreground" />
+      </div>
+    );
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Uploads</h1>
-          <p className="text-muted-foreground">Manage your files and references</p>
+          <p className="text-muted-foreground">Manage your files and references for AI</p>
         </div>
         <div className="relative">
           <Input
@@ -152,7 +189,7 @@ function UploadsPage() {
             id="file-upload"
           />
           <Button asChild disabled={uploading}>
-            <label htmlFor="file-upload" className="cursor-pointer">
+            <label htmlFor="file-upload" className="cursor-pointer shadow-sm">
               {uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -175,40 +212,79 @@ function UploadsPage() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : files.length === 0 ? (
-          <div className="col-span-full py-12 text-center border-2 border-dashed rounded-lg">
-            <File className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <div className="col-span-full py-12 text-center border-2 border-dashed rounded-lg bg-card/50">
+            <File className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-lg font-medium">No files uploaded yet</h3>
             <p className="text-muted-foreground">Upload your first file to see it here</p>
           </div>
         ) : (
           files.map((file) => (
-            <Card key={file.id}>
+            <Card key={file.id} className="overflow-hidden border-border/50 hover:border-border transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium truncate max-w-[200px]">
+                <CardTitle className="text-sm font-semibold truncate max-w-[180px]">
                   {file.file_name}
                 </CardTitle>
-                <File className="h-4 w-4 text-muted-foreground" />
+                <div className="flex gap-1">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle>{file.file_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-4">
+                        {renderPreview(file)}
+                        <div className="grid grid-cols-2 gap-4 text-sm mt-4 p-4 rounded-lg bg-muted/50 border">
+                          <div>
+                            <p className="text-muted-foreground">Type</p>
+                            <p className="font-medium">{file.file_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Size</p>
+                            <p className="font-medium">{formatSize(file.file_size)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Uploaded At</p>
+                            <p className="font-medium">{new Date(file.created_at).toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">ID</p>
+                            <p className="font-medium font-mono text-xs">{file.id}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => copyReference(file)}
+                    title="Copy reference for chat"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-xs text-muted-foreground mb-4">
-                  <p>{file.file_type}</p>
-                  <p>{formatSize(file.file_size)}</p>
-                  <p>{new Date(file.created_at).toLocaleDateString()}</p>
-                </div>
-                <div className="flex gap-2">
+                {renderPreview(file)}
+                <div className="flex gap-2 mt-2">
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 text-xs"
                     onClick={() => handleDownload(file)}
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3.5 w-3.5 mr-1.5" />
                     Download
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:bg-destructive/10 h-9 px-3"
                     onClick={() => handleDelete(file)}
                   >
                     <Trash2 className="h-4 w-4" />

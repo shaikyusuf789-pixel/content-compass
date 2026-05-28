@@ -404,7 +404,7 @@ function ScriptGenerator() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pdf-upload" className="cursor-pointer">UPLOAD * (PDF, MD, JSON)</Label>
+                    <Label htmlFor="pdf-upload-hidden" className="cursor-pointer">UPLOAD SOURCE FILE (PDF, MD, JSON)</Label>
                     {/* Hidden input removed from here and moved to component root */}
                     <div className="border-2 border-dashed rounded-lg p-6 bg-slate-50 flex flex-col items-center justify-center space-y-3">
                       {fileName ? (

@@ -294,7 +294,10 @@ function ScriptGenerator() {
                           <Button 
                             variant="outline" 
                             className="bg-white"
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => {
+                              console.log("Upload button clicked, triggering file input");
+                              fileInputRef.current?.click();
+                            }}
                             disabled={isUploading}
                           >
                             {isUploading ? (

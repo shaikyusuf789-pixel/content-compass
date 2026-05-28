@@ -88,6 +88,50 @@ export type Database = {
           },
         ]
       }
+      scripts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          idea_id: string | null
+          model: string | null
+          title: string
+          updated_at: string
+          video_type: string | null
+          word_count: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          idea_id?: string | null
+          model?: string | null
+          title: string
+          updated_at?: string
+          video_type?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          idea_id?: string | null
+          model?: string | null
+          title?: string
+          updated_at?: string
+          video_type?: string | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scripts_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "raw_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sources_master: {
         Row: {
           channel_name: string

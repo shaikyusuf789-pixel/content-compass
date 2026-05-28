@@ -25,7 +25,7 @@ function Index() {
       </div>
       <div className="flex gap-3">
         <Button asChild>
-          <Link to="/dashboard">Open dashboard</Link>
+          <Link to="/pipeline">Open dashboard</Link>
         </Button>
       </div>
     </div>

@@ -181,7 +181,7 @@ function ScriptGenerator() {
     if (segments.length === 0) return;
     setIsSaving(true);
     try {
-      const fullScript = segments.map(s => s.voiceover).join("\n\n");
+      const fullScript = segments.map(s => s.telugu_text || s.voiceover).join("\n\n");
       await saveScriptFn({ 
         data: {
           idea_id: selectedIdeaId || undefined,

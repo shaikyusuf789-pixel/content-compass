@@ -61,6 +61,16 @@ function ChunksPage() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const slideMutation = useMutation({
+    mutationFn: (chunkId: string) => genSlideFn({ data: { chunkId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["chunks", selectedScriptId] });
+      toast.success("Slide image generated!");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+
   const scripts = scriptsData?.scripts || [];
   const chunks = chunksData?.chunks || [];
 

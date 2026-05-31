@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { addSource, deleteSource, supabaseAdmin } from "@/lib/engine.functions";
+import { addSource, deleteSource } from "@/lib/engine.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 

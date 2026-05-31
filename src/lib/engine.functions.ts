@@ -426,7 +426,7 @@ export const generateAudioForChunk = createServerFn({ method: "POST" })
 
     if (storageErr) throw storageErr;
 
-    const publicUrl = supabaseAdmin.storage.from("assets").getPublicUrl(fileName).data.public_url;
+    const publicUrl = supabaseAdmin.storage.from("assets").getPublicUrl(fileName).data.publicUrl;
 
     await supabaseAdmin.from("audio_assets").insert({
       chunk_id: chunkId,
@@ -435,6 +435,7 @@ export const generateAudioForChunk = createServerFn({ method: "POST" })
       provider: 'openai',
       voice: 'alloy'
     });
+
 
     await supabaseAdmin.from("chunks").update({ status: 'Done' }).eq("id", chunkId);
 

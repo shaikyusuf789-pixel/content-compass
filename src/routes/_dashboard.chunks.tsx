@@ -1,13 +1,11 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getScripts, getChunks, generateChunks, generateAudioForChunk, generateSlideImage } from "@/lib/engine.functions";
-import { Layers, Scissors, CheckCircle2, ChevronRight, Play, Loader2, Music, Image as ImageIcon, Wand2 } from "lucide-react";
-
+import { Layers, Scissors, ChevronRight, Play, Loader2, Music, Image as ImageIcon, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +28,6 @@ function ChunksPage() {
   const generateChunksFn = useServerFn(generateChunks);
   const genAudioFn = useServerFn(generateAudioForChunk);
   const genSlideFn = useServerFn(generateSlideImage);
-
 
   const { data: scriptsData } = useQuery({
     queryKey: ["scripts"],
@@ -70,7 +67,6 @@ function ChunksPage() {
     onError: (err: any) => toast.error(err.message),
   });
 
-
   const scripts = scriptsData?.scripts || [];
   const chunks = chunksData?.chunks || [];
 
@@ -83,7 +79,7 @@ function ChunksPage() {
             <span className="text-[10px] text-slate-400 font-medium tracking-wider">• SEGMENTATION & VOICEOVER</span>
           </div>
           <h1 className="text-3xl font-bold text-slate-900">Chunking Engine</h1>
-          <p className="text-slate-500 mt-1">Break scripts into chunks and generate AI voiceovers.</p>
+          <p className="text-slate-500 mt-1">Break scripts into chunks and generate AI voiceovers and slides.</p>
         </div>
         <div className="flex gap-3">
           <select 
@@ -131,27 +127,27 @@ function ChunksPage() {
               </h3>
               <div className="flex items-center gap-4">
                 <span className="text-xs font-bold text-slate-400 uppercase">{chunks.length} Chunks Generated</span>
-                <Button variant="outline" size="sm" className="text-xs font-bold h-8 rounded-lg border-indigo-100 text-indigo-600">
-                   Generate All Audio
-                </Button>
               </div>
             </div>
             <div className="divide-y">
               {chunks.map((chunk: any) => {
                 const hasAudio = chunk.audio_assets && chunk.audio_assets.length > 0;
                 const audioUrl = hasAudio ? chunk.audio_assets[0].public_url : null;
+                const hasSlide = chunk.slides && chunk.slides.length > 0;
+                const slideUrl = hasSlide ? chunk.slides[0].image_url : null;
                 
                 return (
-                  <div key={chunk.id} className="p-6 flex items-start gap-6 hover:bg-slate-50/50 transition-colors group">
+                  <div key={chunk.id} className="p-6 flex items-start gap-6 hover:bg-slate-50/50 transition-colors group border-b last:border-0">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-colors shrink-0",
                       chunk.status === "Done" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white"
                     )}>
                       {chunk.segment_number}
                     </div>
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-3">
                       <p className="text-slate-900 font-medium leading-relaxed">{chunk.telugu_text}</p>
-                      <div className="flex items-center gap-3">
+                      
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className={cn(
                           "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
                           chunk.status === "Done" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100 animate-pulse"
@@ -164,41 +160,70 @@ function ChunksPage() {
                             Audio Ready
                           </div>
                         )}
-                        {chunk.slides && chunk.slides.length > 0 && (
+                        {hasSlide && (
                           <div className="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
                             <ImageIcon className="h-3 w-3" />
                             Slide Ready
                           </div>
                         )}
                       </div>
+
+                      {hasSlide && (
+                        <div className="relative aspect-video w-48 rounded-xl overflow-hidden border shadow-sm group/slide">
+                           <img src={slideUrl} alt="Slide" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {hasAudio ? (
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="h-10 w-10 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50"
-                          onClick={() => {
-                            const audio = new Audio(audioUrl);
-                            audio.play();
-                          }}
-                        >
-                          <Play className="h-5 w-5 fill-current" />
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 text-slate-400 hover:text-indigo-600"
-                          onClick={() => audioMutation.mutate(chunk.id)}
-                          disabled={audioMutation.isPending}
-                        >
-                          {audioMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Music className="h-5 w-5" />}
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400">
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        {hasAudio ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 px-3 rounded-lg border-indigo-100 text-indigo-600 hover:bg-indigo-50 gap-2"
+                            onClick={() => {
+                              const audio = new Audio(audioUrl);
+                              audio.play();
+                            }}
+                          >
+                            <Play className="h-4 w-4 fill-current" />
+                            Play
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 px-3 rounded-lg text-slate-400 hover:text-indigo-600 gap-2"
+                            onClick={() => audioMutation.mutate(chunk.id)}
+                            disabled={audioMutation.isPending}
+                          >
+                            {audioMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Music className="h-3 w-3" />}
+                            Gen Audio
+                          </Button>
+                        )}
+
+                        {hasSlide ? (
+                           <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 px-3 rounded-lg border-rose-100 text-rose-600 hover:bg-rose-50 gap-2"
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                            View
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 px-3 rounded-lg text-slate-400 hover:text-rose-600 gap-2"
+                            onClick={() => slideMutation.mutate(chunk.id)}
+                            disabled={slideMutation.isPending}
+                          >
+                            {slideMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                            Gen Slide
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

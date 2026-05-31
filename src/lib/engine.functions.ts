@@ -340,3 +340,162 @@ export const saveScript = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+export const getScripts = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin.from("scripts").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return { scripts: data || [] };
+  });
+
+export const getChunks = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ scriptId: z.string().uuid() }))
+  .handler(async ({ data: { scriptId } }) => {
+    const { data, error } = await supabaseAdmin
+      .from("chunks")
+      .select("*, audio_assets(*), slides(*)")
+      .eq("script_id", scriptId)
+      .order("segment_number", { ascending: true });
+    if (error) throw error;
+    return { chunks: data || [] };
+  });
+
+export const generateChunks = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ scriptId: z.string().uuid() }))
+  .handler(async ({ data: { scriptId } }) => {
+    const { data: script, error: fetchErr } = await supabaseAdmin
+      .from("scripts")
+      .select("*")
+      .eq("id", scriptId)
+      .single();
+    
+    if (fetchErr || !script) throw new Error("Script not found");
+
+    // Simple chunking logic: Split by double newlines or sentences
+    const lines = script.content.split(/\n\n+/).filter(Boolean);
+    
+    const chunks = lines.map((line, idx) => ({
+      script_id: scriptId,
+      segment_number: idx + 1,
+      original_text: line,
+      telugu_text: line,
+      status: 'Pending'
+    }));
+
+    const { error: insErr } = await supabaseAdmin.from("chunks").insert(chunks);
+    if (insErr) throw insErr;
+
+    return { ok: true, count: chunks.length };
+  });
+
+export const generateAudioForChunk = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ chunkId: z.string().uuid() }))
+  .handler(async ({ data: { chunkId } }) => {
+    const { data: chunk, error: fetchErr } = await supabaseAdmin
+      .from("chunks")
+      .select("*")
+      .eq("id", chunkId)
+      .single();
+    
+    if (fetchErr || !chunk) throw new Error("Chunk not found");
+
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) throw new Error("OPENAI_API_KEY not configured");
+
+    const res = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: "tts-1",
+        voice: "alloy",
+        input: chunk.telugu_text,
+      }),
+    });
+
+    if (!res.ok) throw new Error(`OpenAI TTS failed: ${await res.text()}`);
+
+    const buffer = await res.arrayBuffer();
+    const fileName = `audio/${chunkId}.mp3`;
+    
+    const { data: upload, error: storageErr } = await supabaseAdmin.storage
+      .from("assets")
+      .upload(fileName, buffer, { contentType: "audio/mpeg", upsert: true });
+
+    if (storageErr) throw storageErr;
+
+    const publicUrl = supabaseAdmin.storage.from("assets").getPublicUrl(fileName).data.publicUrl;
+
+    await supabaseAdmin.from("audio_assets").insert({
+      chunk_id: chunkId,
+      storage_path: fileName,
+      public_url: publicUrl,
+      provider: 'openai',
+      voice: 'alloy'
+    });
+
+    await supabaseAdmin.from("chunks").update({ status: 'Done' }).eq("id", chunkId);
+
+    return { ok: true, url: publicUrl };
+  });
+
+export const generateSlideImage = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ chunkId: z.string().uuid() }))
+  .handler(async ({ data: { chunkId } }) => {
+
+    const { data: chunk, error: fetchErr } = await supabaseAdmin
+      .from("chunks")
+      .select("*")
+      .eq("id", chunkId)
+      .single();
+    
+    if (fetchErr || !chunk) throw new Error("Chunk not found");
+
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) throw new Error("OPENAI_API_KEY not configured");
+
+    // Call DALL-E 3
+    const res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: `Create a clean, professional educational slide image for a YouTube video about: ${chunk.original_text}. The style should be high-quality, academic, and visually engaging for Indian students. No text in the image.`,
+        n: 1,
+        size: "1024x1024",
+      }),
+    });
+
+    if (!res.ok) throw new Error(`OpenAI DALL-E failed: ${await res.text()}`);
+
+    const data = await res.json();
+    const imageUrl = data.data[0].url;
+
+    // Download image and save to storage (DALL-E URLs are temporary)
+    const imgRes = await fetch(imageUrl);
+    const buffer = await imgRes.arrayBuffer();
+    const fileName = `slides/${chunkId}.png`;
+    
+    const { error: storageErr } = await supabaseAdmin.storage
+      .from("assets")
+      .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+
+    if (storageErr) throw storageErr;
+
+    const publicUrl = supabaseAdmin.storage.from("assets").getPublicUrl(fileName).data.publicUrl;
+
+    await supabaseAdmin.from("slides").insert({
+      chunk_id: chunkId,
+      image_url: publicUrl,
+      asset_type: 'image',
+      search_query: chunk.original_text.slice(0, 100)
+    });
+
+    return { ok: true, url: publicUrl };
+  });
+

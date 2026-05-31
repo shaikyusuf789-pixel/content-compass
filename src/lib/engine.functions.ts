@@ -434,10 +434,17 @@ export const generateAudioForChunk = createServerFn({ method: "POST" })
       public_url: publicUrl,
       provider: 'openai',
       voice: 'alloy'
+    });
+
+    await supabaseAdmin.from("chunks").update({ status: 'Done' }).eq("id", chunkId);
+
+    return { ok: true, url: publicUrl };
+  });
 
 export const generateSlideImage = createServerFn({ method: "POST" })
   .inputValidator(z.object({ chunkId: z.string().uuid() }))
   .handler(async ({ data: { chunkId } }) => {
+
     const { data: chunk, error: fetchErr } = await supabaseAdmin
       .from("chunks")
       .select("*")

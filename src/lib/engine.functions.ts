@@ -499,9 +499,3 @@ export const generateSlideImage = createServerFn({ method: "POST" })
     return { ok: true, url: publicUrl };
   });
 
-
-
-    await supabaseAdmin.from("chunks").update({ status: 'Done' }).eq("id", chunkId);
-
-    return { ok: true, url: publicUrl };
-  });

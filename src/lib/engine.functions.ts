@@ -434,7 +434,64 @@ export const generateAudioForChunk = createServerFn({ method: "POST" })
       public_url: publicUrl,
       provider: 'openai',
       voice: 'alloy'
+
+export const generateSlideImage = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ chunkId: z.string().uuid() }))
+  .handler(async ({ data: { chunkId } }) => {
+    const { data: chunk, error: fetchErr } = await supabaseAdmin
+      .from("chunks")
+      .select("*")
+      .eq("id", chunkId)
+      .single();
+    
+    if (fetchErr || !chunk) throw new Error("Chunk not found");
+
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) throw new Error("OPENAI_API_KEY not configured");
+
+    // Call DALL-E 3
+    const res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: `Create a clean, professional educational slide image for a YouTube video about: ${chunk.original_text}. The style should be high-quality, academic, and visually engaging for Indian students. No text in the image.`,
+        n: 1,
+        size: "1024x1024",
+      }),
     });
+
+    if (!res.ok) throw new Error(`OpenAI DALL-E failed: ${await res.text()}`);
+
+    const data = await res.json();
+    const imageUrl = data.data[0].url;
+
+    // Download image and save to storage (DALL-E URLs are temporary)
+    const imgRes = await fetch(imageUrl);
+    const buffer = await imgRes.arrayBuffer();
+    const fileName = `slides/${chunkId}.png`;
+    
+    const { error: storageErr } = await supabaseAdmin.storage
+      .from("assets")
+      .upload(fileName, buffer, { contentType: "image/png", upsert: true });
+
+    if (storageErr) throw storageErr;
+
+    const publicUrl = supabaseAdmin.storage.from("assets").getPublicUrl(fileName).data.publicUrl;
+
+    await supabaseAdmin.from("slides").insert({
+      chunk_id: chunkId,
+      image_url: publicUrl,
+      asset_type: 'image',
+      search_query: chunk.original_text.slice(0, 100)
+    });
+
+    return { ok: true, url: publicUrl };
+  });
+
 
 
     await supabaseAdmin.from("chunks").update({ status: 'Done' }).eq("id", chunkId);

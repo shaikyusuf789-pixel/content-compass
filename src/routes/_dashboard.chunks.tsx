@@ -3,8 +3,9 @@ import { z } from "zod";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getScripts, getChunks, generateChunks, generateAudioForChunk } from "@/lib/engine.functions";
-import { Layers, Scissors, CheckCircle2, ChevronRight, Play, Loader2, Music, Image as ImageIcon } from "lucide-react";
+import { getScripts, getChunks, generateChunks, generateAudioForChunk, generateSlideImage } from "@/lib/engine.functions";
+import { Layers, Scissors, CheckCircle2, ChevronRight, Play, Loader2, Music, Image as ImageIcon, Wand2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";

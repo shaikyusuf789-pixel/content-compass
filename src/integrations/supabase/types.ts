@@ -35,6 +35,88 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_assets: {
+        Row: {
+          chunk_id: string | null
+          created_at: string
+          id: string
+          provider: string | null
+          public_url: string | null
+          storage_path: string
+          voice: string | null
+        }
+        Insert: {
+          chunk_id?: string | null
+          created_at?: string
+          id?: string
+          provider?: string | null
+          public_url?: string | null
+          storage_path: string
+          voice?: string | null
+        }
+        Update: {
+          chunk_id?: string | null
+          created_at?: string
+          id?: string
+          provider?: string | null
+          public_url?: string | null
+          storage_path?: string
+          voice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_assets_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "chunks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chunks: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          original_text: string
+          script_id: string | null
+          segment_number: number
+          status: string
+          telugu_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          original_text: string
+          script_id?: string | null
+          segment_number: number
+          status?: string
+          telugu_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          original_text?: string
+          script_id?: string | null
+          segment_number?: number
+          status?: string
+          telugu_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chunks_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       raw_content: {
         Row: {
           core_hooks: Json | null
@@ -149,6 +231,44 @@ export type Database = {
             columns: ["idea_id"]
             isOneToOne: false
             referencedRelation: "raw_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slides: {
+        Row: {
+          asset_type: string | null
+          chunk_id: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          overlay_text: string | null
+          search_query: string | null
+        }
+        Insert: {
+          asset_type?: string | null
+          chunk_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          overlay_text?: string | null
+          search_query?: string | null
+        }
+        Update: {
+          asset_type?: string | null
+          chunk_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          overlay_text?: string | null
+          search_query?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slides_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "chunks"
             referencedColumns: ["id"]
           },
         ]

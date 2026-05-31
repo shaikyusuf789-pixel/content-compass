@@ -29,6 +29,8 @@ function ChunksPage() {
   const getChunksFn = useServerFn(getChunks);
   const generateChunksFn = useServerFn(generateChunks);
   const genAudioFn = useServerFn(generateAudioForChunk);
+  const genSlideFn = useServerFn(generateSlideImage);
+
 
   const { data: scriptsData } = useQuery({
     queryKey: ["scripts"],
